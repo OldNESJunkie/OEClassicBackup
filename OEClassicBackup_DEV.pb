@@ -33,6 +33,7 @@ Enumeration
 #Checkbox_CloseToTray
 #Checkbox_StartInTray
 #Checkbox_StartWithLogon
+#Checkbox_StayOnTop
 #StatusBar
 #Menu_SysTray
 #RestoreApp
@@ -56,7 +57,8 @@ Declare WriteLog(filename.s, error.s)
 
 ;{ Command Line Procedures
 Procedure BackupDatabase()
-Protected GetDate.s, myid
+Protected GetDate.s, myid, PCName.s
+PCName=GetEnvironmentVariable("COMPUTERNAME")
 RunProgram("taskkill","/f /im oeclassic.exe","",#PB_Program_Hide|#PB_Program_Wait)
 GetDate=FormatDate("%yyyy%mm%dd",Date())
 OpenPreferences("oebackup.prefs")
@@ -70,9 +72,9 @@ If MyLocation=""
 EndIf
 oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
  If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
  Else
-   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
  EndIf
 While ProgramRunning(myid)
 Debug "Backup Running"
@@ -289,26 +291,32 @@ Procedure.s GetPidProcessEx(Name.s)
 EndProcedure
 
 Procedure CreateBackup()
-Protected GetDate.s, myid
+Protected GetDate.s, myid, PCName.s, closeme
+PCName=GetEnvironmentVariable("COMPUTERNAME")
  If GetPidProcessEx("OEClassic.exe")
-   MessageRequester("Error","OE Classic must be closed before backing up.",#MB_ICONERROR)
-    WriteLog("Backup","Backup failed, OE Classic was not closed.")
- Else
-GetDate=FormatDate("%yyyy%mm%dd",Date())
-  While WaitWindowEvent(1):Wend
-StatusBarText(#StatusBar,0,"Please wait.....creating backup",#PB_StatusBar_Center)
- If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
- Else
-   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
- EndIf
-While ProgramRunning(myid)
+   closeme=MessageRequester("Error","OE Classic must be closed before backing up.",#PB_MessageRequester_YesNo|#MB_ICONERROR)
+    If closeme=#PB_MessageRequester_Yes
+      RunProgram("taskkill","/f /im oeclassic.exe","")
+       Delay(500)
+        GetDate=FormatDate("%yyyy%mm%dd",Date())
+     While WaitWindowEvent(1):Wend
+       StatusBarText(#StatusBar,0,"Please wait.....creating backup",#PB_StatusBar_Center)
+      If FindString(MyLocation," ",1)
+        myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+      Else
+        myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+      EndIf
+       While ProgramRunning(myid)
 Debug "Backup Running"
-Wend
-StatusBarText(#StatusBar,0,"Ready",#PB_StatusBar_Center)
-WriteLog("Backup","Database Backup Successfully saved to "+MyLocation)
-MessageRequester("Success","Backup Completed",#MB_ICONINFORMATION)
-EndIf
+       Wend
+         StatusBarText(#StatusBar,0,"Ready",#PB_StatusBar_Center)
+          WriteLog("Backup","Database Backup Successfully saved to "+MyLocation)
+           MessageRequester("Success","Backup Completed, Re-starting OEClassic",#MB_ICONINFORMATION)
+            RunProgram("oeclassic.exe","","")
+    Else
+      WriteLog("Backup","Backup failed, OE Classic was not closed.")
+    EndIf
+ EndIf
 EndProcedure
 
 Procedure CreateBackupTask()
@@ -316,13 +324,14 @@ OpenFile(0,"MyTask.xml",#PB_Ascii)
 WriteStringN(0,"<?xml version="+Chr(34)+"1.0"+Chr(34)+" encoding="+Chr(34)+"UTF-16"+Chr(34)+"?>",#PB_Ascii)
 WriteStringN(0,"<Task version="+Chr(34)+"1.2"+Chr(34)+" xmlns="+Chr(34)+"http://schemas.microsoft.com/windows/2004/02/mit/task"+Chr(34)+">",#PB_Ascii)
 WriteStringN(0,"<RegistrationInfo>",#PB_Ascii)
-WriteStringN(0,"<Date>2021-02-21T10:54:55.4869081</Date>",#PB_Ascii)
+;WriteStringN(0,"<Date>2021-02-21T10:54:55.4869081</Date>",#PB_Ascii)
 WriteStringN(0,"<Author>"+GetEnvironmentVariable("USERNAME")+"</Author>",#PB_Ascii)
 WriteStringN(0,"<URI>\Backup OE Classic</URI>",#PB_Ascii)
 WriteStringN(0,"</RegistrationInfo>",#PB_Ascii)
 WriteStringN(0,"<Triggers>",#PB_Ascii)
 WriteStringN(0,"<CalendarTrigger>",#PB_Ascii)
-WriteStringN(0,"<StartBoundary>2021-02-26T23:59:00-06:00</StartBoundary>",#PB_Ascii)
+WriteStringN(0,"<StartBoundary>"+FormatDate("%yyyy-%mm-%dd",Date())+"T23:59:00-06:00"+"</StartBoundary>",#PB_Ascii)
+;WriteStringN(0,"<StartBoundary>2021-02-26T23:59:00-06:00</StartBoundary>",#PB_Ascii)
 WriteStringN(0,"<ExecutionTimeLimit>PT8H</ExecutionTimeLimit>",#PB_Ascii)
 WriteStringN(0,"<Enabled>true</Enabled>",#PB_Ascii)
 WriteStringN(0,"<ScheduleByWeek>",#PB_Ascii)
@@ -372,9 +381,6 @@ Delay(500)
 RunProgram("schtasks","/create /tn "+Chr(34)+"Backup OE Classic"+Chr(34)+" /xml mytask.xml","",#PB_Program_Hide|#PB_Program_Wait)
   WriteLog("Backup","Scheduled task successfully created.")
    DeleteFile("MyTask.xml",#PB_FileSystem_Force)
-    OpenPreferences("oebackup.prefs")
-     WritePreferenceInteger("SchTsk",1)
-    ClosePreferences()
 EndProcedure
 
 Procedure OpenBackupLocation()
@@ -409,9 +415,9 @@ Protected myid, restorepath.s
          DeleteDirectory(oepath,"*.*",#PB_FileSystem_Recursive|#PB_FileSystem_Force)
           StatusBarText(#StatusBar,0,"Please Wait.....restoring data",#PB_StatusBar_Center)
       If FindString(BackupFile," ",1)
-        myid=RunProgram("7z.exe","x -o"+restorepath+" "+Chr(34)+BackupFile+Chr(34),"",#PB_Program_Open|#PB_Program_Hide)
+        myid=RunProgram("7z.exe","x -o"+restorepath+" "+Chr(34)+BackupFile+Chr(34),"",#PB_Program_Open|#PB_Program_Hide|#PB_Program_Wait)
       Else
-        myid=RunProgram("7z.exe","x -o"+restorepath+" "+BackupFile,"",#PB_Program_Open|#PB_Program_Hide)
+        myid=RunProgram("7z.exe","x -o"+restorepath+" "+BackupFile,"",#PB_Program_Open|#PB_Program_Hide|#PB_Program_Wait)
       EndIf
        While WaitWindowEvent(1):Wend
         While ProgramRunning(myid)
@@ -429,49 +435,6 @@ Protected myid, restorepath.s
   EndIf
  EndIf
 EndProcedure
-
-Procedure UpdatePrefs()
-If GetGadgetState(#Checkbox_CloseToTray)=#PB_Checkbox_Checked
-  OpenPreferences("oebackup.prefs")
-   WritePreferenceInteger("CloseToTray",1)
-  ClosePreferences()
-Else
-  OpenPreferences("oebackup.prefs")
-   WritePreferenceInteger("CloseToTray",0)
-  ClosePreferences()
-EndIf
-
- If GetGadgetState(#Checkbox_RememberBackupLocation)=#PB_Checkbox_Checked
-   OpenPreferences("oebackup.prefs")
-    WritePreferenceString("BkUpDir",GetGadgetText(#String_BackupPath))
-    WritePreferenceInteger("RememberDir",1)
-   ClosePreferences()
- Else
-   OpenPreferences("oebackup.prefs")
-    WritePreferenceString("BkUpDir","")
-    WritePreferenceInteger("RememberDir",0)
-   ClosePreferences()
- EndIf
-
-  If GetGadgetState(#Checkbox_StartInTray)=#PB_Checkbox_Checked
-    OpenPreferences("oebackup.prefs")
-     WritePreferenceInteger("OpenToTray",1)
-    ClosePreferences()
-  Else
-    OpenPreferences("oebackup.prefs")
-     WritePreferenceInteger("OpenToTray",0)
-    ClosePreferences()
-  EndIf
-
-   If GetGadgetState(#Checkbox_StartWithLogon)=#PB_Checkbox_Checked
-     OpenPreferences("oebackup.prefs")
-      WritePreferenceInteger("AutoStart",1)
-     ClosePreferences()
-      CreateShortcut(GetCurrentDirectory()+"oeclassicbackup.exe",GetEnvironmentVariable("USERPROFILE")+"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\OEClassicBackup.lnk","","OE Classic Backup",GetCurrentDirectory(),#SW_SHOWNORMAL,GetCurrentDirectory()+"oeclassicbackup.exe",0)
-   Else
-     DeleteFile(GetEnvironmentVariable("USERPROFILE")+"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\OEClassicBackup.lnk",#PB_FileSystem_Force)
-   EndIf
-EndProcedure
 ;}
 
 ;{ Create Preference File
@@ -482,8 +445,7 @@ If OpenPreferences("oebackup.prefs")=0
     WritePreferenceInteger("RememberDir",0)
     WritePreferenceInteger("CloseToTray",0)
     WritePreferenceInteger("OpenToTray",0)
-    WritePreferenceInteger("AutoStart",0)
-    WritePreferenceInteger("SchTsk",0)
+    WritePreferenceInteger("StayOnTop",0)
    ClosePreferences()
 EndIf
 ;}
@@ -518,8 +480,7 @@ MyLocation=ReadPreferenceString("BkUpDir","")
 KeepDir=ReadPreferenceInteger("RememberDir",0)
 CloseToTray=ReadPreferenceInteger("CloseToTray",0)
 OpenToTray=ReadPreferenceInteger("OpenToTray",0)
-AutoStart=ReadPreferenceInteger("AutoStart",0)
-SchedTask=ReadPreferenceInteger("SchTsk",0)
+StayOnTop=ReadPreferenceInteger("StayOnTop",0)
 ClosePreferences()
 ;}
 
@@ -536,7 +497,7 @@ If ProgramParameter()=""
  Else
    startme=#PB_Window_ScreenCentered
  EndIf
-  OpenWindow(#Window_Main,0,0,500,200,"OE Classic Backup",startme|#PB_Window_SystemMenu)
+  If OpenWindow(#Window_Main,0,0,500,200,"OE Classic Backup",startme|#PB_Window_SystemMenu)
    PanelGadget(#Panel1,5,5,492,170)
     AddGadgetItem(#Panel1,0,"Main")
      TextGadget(#Text_Path,225,7,100,20,"OE Classic Path:")
@@ -554,14 +515,13 @@ If ProgramParameter()=""
     CloseGadgetList()
     OpenGadgetList(#Panel1)
      AddGadgetItem(#Panel1,1,"Options")
-      CheckBoxGadget(#Checkbox_RememberBackupLocation,20,20,165,20,"Remember Backup Location")
-      CheckBoxGadget(#Checkbox_CloseToTray,20,45,105,20,"Close to Tray")
-      CheckBoxGadget(#Checkbox_StartInTray,20,70,185,20,"Start Application in System Tray")
-      CheckBoxGadget(#Checkbox_StartWithLogon,20,95,110,20,"Start With Logon")
+      CheckBoxGadget(#Checkbox_RememberBackupLocation,20,10,165,20,"Remember Backup Location")
+      CheckBoxGadget(#Checkbox_CloseToTray,20,30,105,20,"Close to Tray")
+      CheckBoxGadget(#Checkbox_StartInTray,20,50,185,20,"Start Application in System Tray")
+      CheckBoxGadget(#Checkbox_StayOnTop,20,70,110,20,"Stay on Top")
        ButtonGadget(#Button_CreateDesktopIcon,19,115,165,20,"Create Desktop Shortcut")
        ButtonGadget(#Button_SetTask,190,115,165,20,"Create Backup Task")
     CloseGadgetList()
-     StickyWindow(#Window_Main,#True)
   If CreatePopupImageMenu(#Menu_SysTray);System Tray Menu
     MenuItem(#RestoreApp,"Restore Application Window",CatchImage(#Icon_RestoreApp,?Icon_RestoreApp))
     MenuBar()
@@ -573,9 +533,11 @@ If ProgramParameter()=""
   EndIf
    If KeepDir=1
      SetGadgetState(#Checkbox_RememberBackupLocation,#PB_Checkbox_Checked)
+      flip2=1
    EndIf
     If CloseToTray=1
       SetGadgetState(#Checkbox_CloseToTray,#PB_Checkbox_Checked)
+       flip1=1
     EndIf
      If OpenToTray=1
        SetGadgetState(#Checkbox_StartInTray,#PB_Checkbox_Checked)
@@ -583,13 +545,24 @@ If ProgramParameter()=""
          AddSysTrayIcon(0,WindowID(#Window_Main),systrayicon)
           SysTrayIconToolTip(0,"OE Classic Backup - Click for Options")
            ShowWindow_(WindowID(#Window_Main),#SW_HIDE)
+            flip3=1
      EndIf
       If AutoStart=1
        SetGadgetState(#Checkbox_StartWithLogon,#PB_Checkbox_Checked)
+        flip4=1
       EndIf
-       If SchedTask=1
-         HideGadget(#Button_SetTask,1)
+       If StayOnTop=1
+         SetGadgetState(#Checkbox_StayOnTop,#PB_Checkbox_Checked)
+          StickyWindow(#Window_Main,1)
+           flip5=1
        EndIf
+        If CheckForTask()=1;SchedTask=1
+          DisableGadget(#Button_SetTask,1)
+        EndIf
+         If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
+           DisableGadget(#Button_CreateDesktopIcon,1)
+         EndIf
+  EndIf
 EndIf
 ;}
 
@@ -597,26 +570,24 @@ EndIf
 Repeat
 
 ;{ Disable/Hide Gadgets
-If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
-  HideGadget(#Button_CreateDesktopIcon,1)
-EndIf
-
 If MyLocation<>""
   HideGadget(#Button_SetBackupPath,1)
    HideGadget(#Button_OpenBackupLocation,0)
     DisableGadget(#Button_Backup,0)
      DisableGadget(#Button_OpenBackupLocation,0)
-      DisableMenuItem(#Menu_SysTray,#BackupDB,0)
-       DisableMenuItem(#Menu_SysTray,#RestoreDB,0)
-        DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,0)
+      DisableGadget(#Checkbox_RememberBackupLocation,0)
+       DisableMenuItem(#Menu_SysTray,#BackupDB,0)
+        DisableMenuItem(#Menu_SysTray,#RestoreDB,0)
+         DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,0)
 Else
   HideGadget(#Button_SetBackupPath,0)
    HideGadget(#Button_OpenBackupLocation,1)
     DisableGadget(#Button_Backup,1)
      DisableGadget(#Button_OpenBackupLocation,1)
-      DisableMenuItem(#Menu_SysTray,#BackupDB,1)
-       DisableMenuItem(#Menu_SysTray,#RestoreDB,1)
-        DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,1)
+      DisableGadget(#Checkbox_RememberBackupLocation,1)
+       DisableMenuItem(#Menu_SysTray,#BackupDB,1)
+        DisableMenuItem(#Menu_SysTray,#RestoreDB,1)
+         DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,1)
 EndIf
 ;}
 
@@ -630,12 +601,15 @@ Select event
       eventwindow=EventWindow()
 
     Select eventgadget
-  
+;{ Button gadgets
       Case #Button_Backup
         CreateBackup()
 
       Case #Button_CreateDesktopIcon
         CreateShortcut(GetCurrentDirectory()+"oeclassicbackup.exe",GetEnvironmentVariable("USERPROFILE")+"\Desktop\OE Classic Backup.lnk","","OE Classic Backup",GetCurrentDirectory(),#SW_SHOWNORMAL,GetCurrentDirectory()+"oeclassicbackup.exe",0)
+         If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
+           DisableGadget(#Button_CreateDesktopIcon,1)
+         EndIf
 
       Case #Button_OpenBackupLocation
         OpenBackupLocation()
@@ -652,25 +626,74 @@ Select event
        Case #Button_SetTask
          CreateBackupTask()
           If CheckforTask()=1
-            HideGadget(#Button_SetTask,1)
+            DisableGadget(#Button_SetTask,1)
           EndIf
+;}
+;{ Checkbox Gadgets
 
       Case #Checkbox_CloseToTray
-        UpdatePrefs()
+        flip1=1-flip1
+        If flip1=1
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("CloseToTray",1)
+          ClosePreferences()
+        Else
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("CloseToTray",0)
+          ClosePreferences()
+        EndIf
 
       Case #Checkbox_RememberBackupLocation
-        UpdatePrefs()
+        flip2=1-flip2
+        If flip2=1
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceString("BkUpDir",GetGadgetText(#String_BackupPath))
+           WritePreferenceInteger("RememberDir",1)
+          ClosePreferences()
+        Else
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceString("BkUpDir","")
+           WritePreferenceInteger("RememberDir",0)
+          ClosePreferences()
+        EndIf
 
       Case #Checkbox_StartInTray
-        UpdatePrefs()
+        flip3=1-flip3
+        If flip3=1
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("OpenToTray",1)
+          ClosePreferences()
+        Else
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("OpenToTray",0)
+          ClosePreferences()
+        EndIf
 
-      Case #Checkbox_StartWithLogon
-        UpdatePrefs()
-
+      Case #Checkbox_StayOnTop
+        flip4=1-flip4
+        If flip4=1
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("StayOnTop",1)
+          ClosePreferences()
+           StickyWindow(#Window_Main,1)
+        Else
+          OpenPreferences("oebackup.prefs")
+           WritePreferenceInteger("StayOnTop",0)
+          ClosePreferences()
+           StickyWindow(#Window_Main,0)
+        EndIf
+;}
+;{ Text Gadgets
       Case #Text_BackupPath
         SetGadgetText(#String_BackupPath,"")
          SetGadgetState(#Checkbox_RememberBackupLocation,#PB_Checkbox_Unchecked)
-          MyLocation=""
+          DisableGadget(#Checkbox_RememberBackupLocation,1)
+           OpenPreferences("oebackup.prefs")
+            WritePreferenceString("BkUpDir","")
+            WritePreferenceInteger("RememberDir",0)
+           ClosePreferences()
+            MyLocation=""
+;}
 
     EndSelect
 ;{ Menu Events
@@ -693,8 +716,7 @@ Select event
 
         Case #QuitApp
           RemoveSysTrayIcon(0)
-           UpdatePrefs()
-            End
+           End
 
       EndSelect
 ;}
@@ -750,12 +772,9 @@ End7zipdll:
 EndDataSection
 ;}
 ; IDE Options = PureBasic 5.73 LTS (Windows - x64)
-; CursorPosition = 661
-; FirstLine = 50
-; Folding = AJhAg
-; EnableThread
+; CursorPosition = 4
+; Folding = AAAAA+
 ; EnableXP
 ; EnableAdmin
 ; UseIcon = gfx\icon3.ico
 ; Executable = C:\Temp\OEClassicBackup.exe
-; Compiler = PureBasic 5.73 LTS (Windows - x86)
