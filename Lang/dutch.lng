@@ -1,0 +1,63 @@
+[MainWindow]
+WinTitle=                            OE Klassieke back-up
+FirstTab=                                Voornaamst
+OEPath=                               OE Klassiek pad:
+BackupLocation=                    Back-uplocatie:
+BackupClearTip=             Klik om het back-uppad te wissen
+ButtonCreateBackup=                      Een backup maken
+ButtonSetLocation=                 Back-uplocatie instellen
+ButtonOpenLocation=               Open Back-uplocatie
+ButtonRestore=                          Back-up terugzetten
+StatusBarText=                                   Klaar
+
+[OptionsWindow]
+SecondTab=                                     Opties
+CheckClose=                              Dicht bij lade
+CheckRestartOE=  Start OE Classic opnieuw nadat de back-up is voltooid
+CheckStartInTray=     Start de toepassing in het systeemvak
+CheckStayOnTop=                            Blijf er boven op
+ButtonDesktopShortcut=         Maak een bureaubladsnelkoppeling
+ButtonCreateTask=                   Maak een back-uptaak
+ButtonOpenLog=                         Open Back-uplogboek
+
+[PopUpMenu]
+RestoreWin=                 Applicatievenster herstellen
+Backup=                                Back-updatabase
+Restore=                              Database herstellen
+OpenFolder=                         Open de back-upmap
+QuitApp=                                          Ontslag nemen
+
+[Messages]
+BackupErrorRead=  Kan back-uplogboek niet openen. Bestand is verwijderd of er is nog geen back-up gemaakt.
+CloseError=  OE Classic moet worden gesloten voordat u achteruitrijdt. Nu sluiten?
+Error=       Fout
+ErrNotClosed= OE Classic moet worden gesloten voordat gegevens worden hersteld.
+MsgSuccess=   Back-up voltooid, OE Classic opnieuw gestart.
+OEPathMsg=                OE Klassiek pad niet gevonden!!!
+StatusBackup=         Even geduld a.u.b. back-up maken
+SuccessMsg=                                   Succes
+SysTrayTooltip=  OE Classic Backup - Klik voor opties
+
+[Misc}
+AppRunning= Applicatie loopt al!!! Controleer het systeemvak!!!
+DesktopIconText=                     OE Klassieke back-up
+MsgBackupLocation=            Kies Back-uplocatie:
+TaskName=                            Backup OE Classic
+
+[RestoreMsgs]
+RestoreQuest= Weet u zeker dat u wilt herstellen vanaf een back-up?
+Restore=                                      Herstellen
+RestoreBkup=                Selecteer back-up om te herstellen:
+Warning=                                      Waarschuwing
+Warning1= Hierdoor worden uw huidige OE Classic-gegevens overschreven. Weet u zeker dat u wilt doorgaan??
+StatusText1=           Even geduld a.u.b.... gegevens worden hersteld
+Completed=                          Herstellen voltooid
+Cancelled=                                  Geannuleerd
+Cencelled2=  Uw herstelverzoek is geannuleerd.
+
+[LogMessages]
+LogNoPath=                     Er is geen back-uppad gedefinieerd.
+LogFailure=  Back-up mislukt, OE Classic is niet afgesloten.
+LogFailure2= Herstellen mislukt, OE Classic is niet gesloten.
+LogSuccess=    Databaseback-up succesvol opgeslagen in 
+LogSuccess2=                       Herstel succesvol.

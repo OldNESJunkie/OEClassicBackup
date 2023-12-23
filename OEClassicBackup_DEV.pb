@@ -4,6 +4,12 @@
 ;**   Daniel Ford 02/12/2021    **
 ;*********************************
 
+;{ Include external libraries
+XIncludeFile "Includes\MultiLang.pb"
+XIncludeFile "Includes\Registry.pbi"
+UseModule Registry
+;}
+
 ;{ Re-create systray icon if explorer crashes
 #TaskbarCreated = #PB_Event_FirstCustomValue
 Declare.s SizeIt(Value.q)
@@ -17,6 +23,7 @@ Prototype ProcessNext(Snapshot, Process)
 ;}
 
 ;{ Global Variables
+Global buffer$
 Global oepath.s, BackupFile.s, MyLocation.s
 Global flip1 ;Close to System Tray
 Global flip2 ;Re-open OE Classic after backup completion
@@ -25,6 +32,7 @@ Global flip4 ;Window stays on top
 Global windowfound
 Global ProcessFirst.ProcessFirst
 Global ProcessNext.ProcessNext
+Global Language.Language
 ;}
 
 ;{ Window/Gadget Enumeration
@@ -83,14 +91,17 @@ OpenPreferences("oebackup.prefs")
  MyLocation=ReadPreferenceString("BkUpDir","")
 ClosePreferences()
 If MyLocation=""
-  WriteLog("Backup","No backup path defined")
+  WriteLog("Backup",Language(Language,"LogMessages","LogNoPath"))
    HideWindow(#Window_Main,0)
-    MessageRequester("Error","No backup path defined",#MB_ICONERROR)
+    MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
      windowfound=0
       End
   ProcedureReturn
 EndIf
-oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
+OEInstalled.s=ReadValue(#HKEY_CURRENT_USER,"\Software\OEClassic","UserDataLocation")
+If OEInstalled<>""
+oepath.s=OEInstalled
+EndIf
  If FindString(MyLocation," ",1)
    myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
  Else
@@ -99,7 +110,7 @@ oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
 While ProgramRunning(myid)
 Debug "Backup Running"
 Wend
-WriteLog("Backup","Database Backup Successfully saved to "+Chr(34)+MyLocation+Chr(34))
+WriteLog("Backup",Language(Language,"LogMessages","LogSuccess")+Chr(34)+MyLocation+Chr(34))
 OpenPreferences("oebackup.prefs")
  If ReadPreferenceInteger("ReopenOE", 0)=1
    RunProgram("oeclassic.exe")
@@ -119,7 +130,7 @@ myid=RunProgram("schtasks","/query","",#PB_Program_Open|#PB_Program_Read|#PB_Pro
 If IsProgram(myid)
  While ProgramRunning(myid)
    output$=ReadProgramString(myid)
-  If FindString(output$,"Backup OE Classic",1,#PB_String_NoCase)
+  If FindString(output$,Language(Language,"Misc","TaskName"),1,#PB_String_NoCase)
     taskfound=1
      Break
   Else
@@ -288,6 +299,28 @@ Procedure FindWin(Title$)
   ProcedureReturn findwin
 EndProcedure
 
+Procedure.s GetLocale()
+Protected buffer$
+buffer$=Space(999)
+GetLocaleInfo_(#LOCALE_USER_DEFAULT,#LOCALE_SLANGUAGE,buffer$,Len(buffer$))
+
+Select buffer$
+
+  Case "Deutsch (Deutschland)", "German (Germany)"
+    LoadLanguage(Language.Language,GetCurrentDirectory()+"\Lang\german.lng")
+  Case "Dutch (Netherlands)", "Nederlands (Nederland)"
+    LoadLanguage(Language.Language,GetCurrentDirectory()+"\Lang\dutch.lng")
+  Default
+    If buffer$ = "English (United States)"
+      LoadLanguage(Language)
+    Else
+      MessageRequester("Warning","Language not found, defaulting to English.",#MB_ICONWARNING)
+    EndIf
+
+EndSelect
+
+EndProcedure
+
 Procedure.s GetPidProcessEx(Name.s)
   ;/// Return all process id as string separate by comma
   ;/// Author : jpd
@@ -335,21 +368,21 @@ Procedure CreateBackup()
 Protected GetDate.s, myid, PCName.s, closeme, MyName.s
 PCName=GetEnvironmentVariable("COMPUTERNAME")
  If GetPidProcessEx("OEClassic.exe")
-   closeme=MessageRequester("Error","OE Classic must be closed before backing up."+#CRLF$+"Close it now?",#PB_MessageRequester_YesNo|#MB_ICONERROR)
+   closeme=MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","CloseError"),#PB_MessageRequester_YesNo|#MB_ICONERROR)
     windowfound=1
   If closeme=#PB_MessageRequester_Yes
     RunProgram("taskkill","/f /im oeclassic.exe","",#PB_Program_Hide)
      Delay(500)
       Goto runbackup
   Else
-    WriteLog("Backup","Backup failed, OE Classic was not closed.")
+    WriteLog("Backup",Language(Language,"LogMessages","LogFailure"))
   EndIf
  Else
 runbackup:
    GetDate=FormatDate("%yyyy%mm%dd",Date())
    MyName=GetEnvironmentVariable("USERNAME")
      While WaitWindowEvent(1):Wend
-       StatusBarText(#StatusBar,0,"Please wait.....creating backup",#PB_StatusBar_Center)
+       StatusBarText(#StatusBar,0,Language(Language,"Messages","StatusBackup"),#PB_StatusBar_Center)
       If FindString(MyLocation," ",1)
         myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
       Else
@@ -358,10 +391,10 @@ runbackup:
        While ProgramRunning(myid)
        Wend
          StatusBarText(#StatusBar,0,"Ready",#PB_StatusBar_Center)
-          WriteLog("Backup","Database Backup Successfully saved to "+Chr(34)+MyLocation+Chr(34))
+          WriteLog("Backup",Language(Language,"LogMessages","LogSuccess")+Chr(34)+MyLocation+Chr(34))
            OpenPreferences("oebackup.prefs")
             If ReadPreferenceInteger("ReopenOE", 0)=1
-              MessageRequester("Success","Backup Completed, Re-starting OEClassic",#MB_ICONINFORMATION)
+              MessageRequester(Language(Language,"Messages","SuccessMsg"),Language(Language,"Messages","MsgSuccess"),#MB_ICONINFORMATION)
                RunProgram("oeclassic.exe")
                 windowfound=0
             EndIf
@@ -447,24 +480,24 @@ EndProcedure
 Procedure RestoreBackup()
 Protected myid, restorepath.s
  If GetPidProcessEx("OEClassic.exe")
-   MessageRequester("Error","OE Classic must be closed before restoring data.",#MB_ICONERROR)
-    WriteLog("Backup","Restore failed, OEClassic was not closed.")
+   MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","ErrNotClosed"),#MB_ICONERROR)
+    WriteLog("Backup",Language(Language,"LogMessages","LogFailure2"))
  Else
-   myrestore=MessageRequester("Restore","Are you sure you wish to restore from a backup?",#PB_MessageRequester_YesNo|#MB_ICONQUESTION)
+   myrestore=MessageRequester(Language(Language,"RestoreMsgs","Restore"),Language(Language,"RestoreMsgs","RestoreQuest"),#PB_MessageRequester_YesNo|#MB_ICONQUESTION)
   If myrestore=#PB_MessageRequester_Yes
    If MyLocation<>""
      startpath.s=MyLocation
    Else
      startpath.s=""
    EndIf
-     BackupFile=OpenFileRequester("Restore Backup",startpath,"7-Zip (*.7z)|*.7z",0)
+     BackupFile=OpenFileRequester(language(Language,"RestoreMsgs","RestoreBkup"),startpath,"7-Zip (*.7z)|*.7z",0)
     If BackupFile<>""
-      yesrestore=MessageRequester("Warning","This will overwrite your current OE Classic data."+#CRLF$+"Are you sure you wish to continue?",#PB_MessageRequester_YesNo|#MB_ICONEXCLAMATION)
+      yesrestore=MessageRequester(Language(Language,"RestoreMsgs","Warning"),Language(Language,"RestoreMsgs","Warning1"),#PB_MessageRequester_YesNo|#MB_ICONEXCLAMATION)
      If yesrestore=#PB_MessageRequester_Yes
        restorepath.s=GetEnvironmentVariable("USERPROFILE")
         restorepath+"\AppData\Local\"
          DeleteDirectory(oepath,"*.*",#PB_FileSystem_Recursive|#PB_FileSystem_Force)
-          StatusBarText(#StatusBar,0,"Please Wait.....restoring data",#PB_StatusBar_Center)
+          StatusBarText(#StatusBar,0,Language(Language,"RestoreMsgs","StatusText1"),#PB_StatusBar_Center)
       If FindString(BackupFile," ",1)
         myid=RunProgram("7z.exe","x -o"+restorepath+" "+Chr(34)+BackupFile+Chr(34),"",#PB_Program_Open|#PB_Program_Hide|#PB_Program_Wait)
       Else
@@ -474,15 +507,15 @@ Protected myid, restorepath.s
         While ProgramRunning(myid)
           Debug "Restore Running"
         Wend
-        StatusBarText(#Statusbar,0,"Ready",#PB_StatusBar_Center)
-       WriteLog("Backup","Restore Successful")
-      MessageRequester("Success","Restore Completed",#MB_ICONINFORMATION)
+        StatusBarText(#Statusbar,0,Language(Language,"MainWindow","StatusBarText"),#PB_StatusBar_Center)
+       WriteLog("Backup",Language(Language,"LogMessages","LogSuccess2"))
+      MessageRequester(Language(Language,"Messages","SuccessMsg"),Language(Language,"RestoreMsgs","Completed"),#MB_ICONINFORMATION)
      Else
-       MessageRequester("Cancelled","Your restore request has been cancelled.",#MB_ICONINFORMATION)
+       MessageRequester(Language(Language,"RestoreMsgs","Cancelled"),Language(Language,"RestoreMsgs","Cancelled2"),#MB_ICONINFORMATION)
      EndIf
     EndIf
   Else
-    MessageRequester("Cancelled","Your restore request has been cancelled.",#MB_ICONINFORMATION)
+    MessageRequester(Language(Language,"RestoreMsgs","Cancelled"),Language(Language,"RestoreMsgs","Cancelled2"),#MB_ICONINFORMATION)
   EndIf
  EndIf
 EndProcedure
@@ -548,11 +581,28 @@ StayOnTop=ReadPreferenceInteger("StayOnTop",0)
 ClosePreferences()
 ;}
 
+;{ Create mutex
+MutexID=CreateMutex_(0,1,"OE Classic Backup")
+MutexError=GetLastError_()
+If MutexID=0 Or MutexError<>0
+  MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Misc","AppRunning"),#MB_ICONWARNING)
+  End
+EndIf
+;}
+
+;{ Check for Lang folder and set language
+If FileSize(GetCurrentDirectory()+"Lang")=-1
+ MessageRequester("Error","Language folder missing, defaulting to English.",#MB_ICONWARNING)
+EndIf
+GetLocale()
+;}
+
 ;{ Create Window and Gadgets
-If FileSize(GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic")<>-1
-  oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
+OEInstalled.s=ReadValue(#HKEY_CURRENT_USER,"\Software\OEClassic","UserDataLocation")
+If OEInstalled<>""
+  oepath.s=OEInstalled
 Else
-  MessageRequester("Error","OE Classic path not found!!!",#MB_ICONERROR)
+  MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","OEPathMsg"),#MB_ICONERROR)
    End
 EndIf
 If ProgramParameter()=""
@@ -561,40 +611,40 @@ If ProgramParameter()=""
  Else
    startme=#PB_Window_ScreenCentered
  EndIf
-  If OpenWindow(#Window_Main,0,0,500,200,"OE Classic Backup",startme|#PB_Window_SystemMenu)
+  If OpenWindow(#Window_Main,0,0,500,200,Language(Language,"MainWindow","WinTitle"),startme|#PB_Window_SystemMenu)
    PanelGadget(#Panel1,5,5,492,170)
-    AddGadgetItem(#Panel1,0,"Main")
-     TextGadget(#Text_Path,205,7,100,20,"OE Classic Path:")
+    AddGadgetItem(#Panel1,0,Language(Language,"MainWindow","FirstTab"))
+     TextGadget(#Text_Path,205,7,100,20,Language(Language,"MainWindow","OEPath"))
       StringGadget(#String_Path,40,25,400,20,oepath,#PB_String_ReadOnly)
-       HyperLinkGadget(#Text_BackupPath,160,47,190,20,"BackUp Location (Click me to clear):",#Blue)
-       GadgetToolTip(#Text_BackupPath,"Click to clear backup path")
+       HyperLinkGadget(#Text_BackupPath,160,47,290,20,Language(Language,"MainWindow","BackupLocation"),#Blue)
+       GadgetToolTip(#Text_BackupPath,Language(Language,"MainWindow","BackupClearTip"))
         StringGadget(#String_BackupPath,40,67,400,20,MyLocation)
-         ButtonGadget(#Button_Backup,0,105,150,30,"Create Backup")
-         ButtonGadget(#Button_SetBackupPath,167,105,150,30,"Set Backup Location")
-         ButtonGadget(#Button_OpenBackupLocation,167,105,150,30,"Open Backup Location")
-         ButtonGadget(#Button_RestoreBackup,334,105,150,30,"Restore Backup")
+         ButtonGadget(#Button_Backup,0,105,150,30,Language(Language,"MainWindow","ButtonCreateBackup"))
+         ButtonGadget(#Button_SetBackupPath,167,105,150,30,Language(Language,"MainWindow","ButtonSetLocation"))
+         ButtonGadget(#Button_OpenBackupLocation,167,105,150,30,Language(Language,"MainWindow","ButtonOpenLocation"))
+         ButtonGadget(#Button_RestoreBackup,334,105,150,30,Language(Language,"MainWindow","ButtonRestore"))
           CreateStatusBar(#StatusBar,WindowID(#Window_Main))
            AddStatusBarField(500)
-           StatusBarText(#StatusBar,0,"Ready",#PB_StatusBar_Center)
+           StatusBarText(#StatusBar,0,Language(Language,"MainWindow","StatusBarText"),#PB_StatusBar_Center)
     CloseGadgetList()
     OpenGadgetList(#Panel1)
-     AddGadgetItem(#Panel1,1,"Options")
-      CheckBoxGadget(#Checkbox_CloseToTray,20,10,105,20,"Close to Tray"); Flip1
-      CheckBoxGadget(#Checkbox_RestartOEClassic,20,30,243,20,"Restart OE Classic after backup completion");Flip2
-      CheckBoxGadget(#Checkbox_StartInTray,20,50,185,20,"Start Application in System Tray");Flip3
-      CheckBoxGadget(#Checkbox_StayOnTop,20,70,110,20,"Stay on Top");Flip4
-       ButtonGadget(#Button_CreateDesktopIcon,0,115,155,22,"Create Desktop Shortcut")
-       ButtonGadget(#Button_SetTask,164,115,155,22,"Create Backup Task")
-       ButtonGadget(#Button_OpenBackupLog,328,115,155,22,"Open Backup Log")
+     AddGadgetItem(#Panel1,1,Language(Language,"OptionsWindow","SecondTab"));"Options")
+      CheckBoxGadget(#Checkbox_CloseToTray,20,10,400,20,Language(Language,"OptionsWindow","CheckClose")); Flip1
+      CheckBoxGadget(#Checkbox_RestartOEClassic,20,30,400,20,Language(Language,"OptionsWindow","CheckRestartOE"));Flip2
+      CheckBoxGadget(#Checkbox_StartInTray,20,50,400,20,Language(Language,"OptionsWindow","CheckStartInTray"));Flip3
+      CheckBoxGadget(#Checkbox_StayOnTop,20,70,400,20,Language(Language,"OptionsWindow","CheckStayOnTop"));Flip4
+       ButtonGadget(#Button_CreateDesktopIcon,0,115,155,22,Language(Language,"OptionsWindow","ButtonDesktopShortcut"))
+       ButtonGadget(#Button_SetTask,164,115,155,22,Language(Language,"OptionsWindow","ButtonCreateTask"))
+       ButtonGadget(#Button_OpenBackupLog,328,115,155,22,Language(Language,"OptionsWindow","ButtonOpenLog"))
     CloseGadgetList()
   If CreatePopupImageMenu(#Menu_SysTray);System Tray Menu
-    MenuItem(#RestoreApp,"Restore Application Window",CatchImage(#Icon_RestoreApp,?Icon_RestoreApp))
+    MenuItem(#RestoreApp,Language(Language,"PopUpMenu","RestoreWin"),CatchImage(#Icon_RestoreApp,?Icon_RestoreApp))
     MenuBar()
-     MenuItem(#BackupDB,"Backup Database",CatchImage(#Icon_BackupDB,?Icon_BackupDB))
-      MenuItem(#RestoreDB,"Restore Database",CatchImage(#Icon_RestoreDB,?Icon_RestoreDB))
-       MenuItem(#OpenBackupFolder,"Open Backup Folder",CatchImage(#Icon_BackupFolder,?Icon_BackupFolder))
+     MenuItem(#BackupDB,Language(Language,"PopUpMenu","Backup"),CatchImage(#Icon_BackupDB,?Icon_BackupDB))
+      MenuItem(#RestoreDB,Language(Language,"PopUpMenu","Restore"),CatchImage(#Icon_RestoreDB,?Icon_RestoreDB))
+       MenuItem(#OpenBackupFolder,Language(Language,"PopUpMenu","OpenFolder"),CatchImage(#Icon_BackupFolder,?Icon_BackupFolder))
     MenuBar()
-        MenuItem(#QuitApp,"Quit",CatchImage(#Icon_Quit,?Icon_Quit))
+        MenuItem(#QuitApp,Language(Language,"PopUpMenu","QuitApp"),CatchImage(#Icon_Quit,?Icon_Quit))
   EndIf
     If CloseToTray=1
       SetGadgetState(#Checkbox_CloseToTray,#PB_Checkbox_Checked)
@@ -608,7 +658,7 @@ If ProgramParameter()=""
       SetGadgetState(#Checkbox_StartInTray,#PB_Checkbox_Checked)
        systrayicon.l = CatchImage(#Icon_SysTray, ?Icon_Systray)
         AddSysTrayIcon(0,WindowID(#Window_Main),systrayicon)
-         SysTrayIconToolTip(0,"OE Classic Backup - Click for Options")
+         SysTrayIconToolTip(0,Language(Language,"Messages","SysTrayTooltip"))
           ShowWindow_(WindowID(#Window_Main),#SW_HIDE)
            flip3=1
     EndIf
@@ -623,7 +673,7 @@ If ProgramParameter()=""
           If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
             DisableGadget(#Button_CreateDesktopIcon,1)
           EndIf
-         SetWindowCallback(@WinCallback())    ; activate the callback
+         SetWindowCallback(@WinCallback()); Activate the callback
   EndIf
 EndIf
 ;}
@@ -666,7 +716,7 @@ Select event
         CreateBackup()
 
       Case #Button_CreateDesktopIcon
-        CreateShortcut(GetCurrentDirectory()+"oeclassicbackup.exe",GetEnvironmentVariable("USERPROFILE")+"\Desktop\OE Classic Backup.lnk","","OE Classic Backup",GetCurrentDirectory(),#SW_SHOWNORMAL,GetCurrentDirectory()+"oeclassicbackup.exe",0)
+        CreateShortcut(GetCurrentDirectory()+"oeclassicbackup.exe",GetEnvironmentVariable("USERPROFILE")+"\Desktop\OE Classic Backup.lnk","",Language(Language,"Misc","DesktopIconText"),GetCurrentDirectory(),#SW_SHOWNORMAL,GetCurrentDirectory()+"oeclassicbackup.exe",0)
          If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
            DisableGadget(#Button_CreateDesktopIcon,1)
          EndIf
@@ -676,16 +726,16 @@ Select event
 
       Case #Button_OpenBackupLog
         If FileSize("backup.log")<>-1
-          RunProgram("backup.log");("notepad.exe","backup.log",GetCurrentDirectory())
+          RunProgram("backup.log")
         Else
-          MessageRequester("Error","Cannot open backup log."+#CRLF$+"File has been deleted or no backup ran yet.",#MB_ICONWARNING)
+          MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","BackupErrorRead"),#MB_ICONWARNING)
         EndIf
 
       Case #Button_RestoreBackup
         RestoreBackup()
 
       Case #Button_SetBackupPath
-        MyLocation=PathRequester("Choose Backup Location",GetCurrentDirectory())
+        MyLocation=PathRequester(Language(Language,"Misc","MsgBackupLocation"),GetCurrentDirectory())
          If MyLocation<>""
            SetGadgetText(#String_BackupPath,MyLocation)
             OpenPreferences("oebackup.prefs")
@@ -795,7 +845,7 @@ Select event
         If GetGadgetState(#Checkbox_CloseToTray)=#PB_Checkbox_Checked
           systrayicon.l = CatchImage(#Icon_SysTray, ?Icon_Systray)
            AddSysTrayIcon(0,WindowID(#Window_Main),systrayicon)
-            SysTrayIconToolTip(0,"OE Classic Backup - Click for Options")
+            SysTrayIconToolTip(0,Language(Language,"Messages","SysTrayTooltip"))
              ShowWindow_(WindowID(#Window_Main),#SW_HIDE)
         Else
           End
@@ -812,6 +862,7 @@ Select event
 EndSelect
 
 ForEver
+ResetLanguage(Language)
 ;}
 
 ;{ Embed Files
@@ -845,9 +896,100 @@ End7zipdll:
 
 EndDataSection
 ;}
-; IDE Options = PureBasic 5.73 LTS (Windows - x64)
-; CursorPosition = 5
-; Folding = AAAAAg
+
+;{ Default Language
+DataSection
+
+  Language:
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                      "MainWindow"
+  ;==================================================================================================================
+    Data.s "WinTitle",                                                                            "OE Classic Backup"
+    Data.s "FirstTab",                                                                                         "Main"
+    Data.s "OEPath",                                                                               "OE Classic Path:"
+    Data.s "BackupLocation",                                                                       "BackUp Location:"
+    Data.s "BackupClearTip",                                                             "Click to clear backup path"
+    Data.s "ButtonCreateBackup",                                                                      "Create Backup"
+    Data.s "ButtonSetLocation",                                                                 "Set Backup Location"
+    Data.s "ButtonOpenLocation",                                                               "Open Backup Location"
+    Data.s "ButtonRestore",                                                                          "Restore Backup"
+    Data.s "StatusBarText",                                                                                   "Ready"
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                   "OptionsWindow"
+  ;==================================================================================================================
+    Data.s "SecondTab",                                                                                     "Options"
+    Data.s "CheckClose",                                                                              "Close to Tray"
+    Data.s "CheckRestartOE",                                             "Restart OE Classic after backup completion"
+    Data.s "CheckStartInTray",                                                     "Start Application in System Tray"
+    Data.s "CheckStayOnTop",                                                                            "Stay on Top"
+    Data.s "ButtonDesktopShortcut",                                                         "Create Desktop Shortcut"
+    Data.s "ButtonCreateTask",                                                                   "Create Backup Task"
+    Data.s "ButtonOpenLog",                                                                         "Open Backup Log"
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                       "PopUpMenu"
+  ;==================================================================================================================
+    Data.s "RestoreWin",                                                                 "Restore Application Window"
+    Data.s "Backup",                                                                                "Backup Database"
+    Data.s "Restore",                                                                              "Restore Database"
+    Data.s "OpenFolder",                                                                         "Open Backup Folder"
+    Data.s "QuitApp",                                                                                          "Quit"
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                        "Messages"
+  ;==================================================================================================================
+    Data.s "BackupErrorRead",          "Cannot open backup log."+#CRLF$+"File has been deleted or no backup ran yet."
+    Data.s "CloseError",                        "OE Classic must be closed before backing up."+#CRLF$+"Close it now?"
+    Data.s "Error",                                                                                           "Error"
+    Data.s "ErrNotClosed",                                         "OE Classic must be closed before restoring data."
+    Data.s "MsgSuccess",                                                   "Backup Completed, Re-starting OE Classic"
+    Data.s "OEPathMsg",                                                                "OE Classic path not found!!!"
+    Data.s "StatusBackup",                                                          "Please wait.....creating backup"
+    Data.s "SuccessMsg",                                                                                    "Success"
+    Data.s "SysTrayTooltip",                                                  "OE Classic Backup - Click for Options"
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                            "Misc"
+  ;==================================================================================================================
+    Data.s "AppRunning",                 "Application is already running!!!"+#CRLF$+"Please check the system tray!!!"
+    Data.s "DesktopIconText",                                                                     "OE Classic Backup"
+    Data.s "MsgBackupLocation",                                                             "Choose Backup Location:"
+    Data.s "TaskName",                                                                            "Backup OE Classic"
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                     "RestoreMsgs"
+  ;==================================================================================================================
+    Data.s "RestoreQuest",                                          "Are you sure you wish to restore from a backup?"
+    Data.s "Restore",                                                                                       "Restore"
+    Data.s "RestoreBkup",                                                                 "Select backup to restore:"
+    Data.s "Warning",                                                                                       "Warning"
+    Data.s "Warning1","This will overwrite your current OE Classic Data."+#CRLF$+"Are you sure you wish to continue?"
+    Data.s "StatusText1",                                                            "Please Wait.....restoring data"
+    Data.s "Completed",                                                                           "Restore Completed"
+    Data.s "Cancelled",                                                                                   "Cancelled"
+    Data.s "Cencelled2",                                                   "Your restore request has been cancelled."
+
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                     "LogMessages"
+  ;==================================================================================================================
+    Data.s "LogNoPath",                                                                     "No backup path defined."
+    Data.s "LogFailure",                                                  "Backup failed, OE Classic was not closed."
+    Data.s "LogFailure2",                                                "Restore failed, OE Classic was not closed."
+    Data.s "LogSuccess",                                                     "Database backup successfully saved to "
+    Data.s "LogSuccess2",                                                                       "Restore Successful."
+
+  ;==================================================================================================================
+  Data.s "_END_",                                                                                                  ""
+  ;==================================================================================================================
+  
+EndDataSection
+;}
+; IDE Options = PureBasic 6.04 LTS (Windows - x64)
+; CursorPosition = 122
+; FirstLine = 2
+; Folding = AEAAAAw
 ; EnableXP
 ; EnableAdmin
 ; UseIcon = gfx\icon3.ico

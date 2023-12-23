@@ -1,0 +1,63 @@
+﻿[MainWindow]
+WinTitle=                            OE Classic Backup
+FirstTab=                                Hauptsächlich
+OEPath=                               OE Classic Path:
+BackupLocation=                    Backup-Speicherort:
+BackupClearTip=             Klicken Sie, um den Sicherungspfad zu löschen
+ButtonCreateBackup=                      Ein Backup erstellen
+ButtonSetLocation=                 Legen Sie den Backup-Speicherort fest
+ButtonOpenLocation=               Öffnen Sie den Sicherungsspeicherort
+ButtonRestore=                          Backup wiederherstellen
+StatusBarText=                                   Bereit
+
+[OptionsWindow]
+SecondTab=                                     Optionen
+CheckClose=                              In der Nähe des Tabletts
+CheckRestartOE=  Starten Sie OE Classic nach Abschluss der Sicherung neu
+CheckStartInTray=     Starten Sie die Anwendung in der Taskleiste
+CheckStayOnTop=                            An der Spitze bleiben
+ButtonDesktopShortcut=         Desktopverknüpfung erstellen
+ButtonCreateTask=                   Sicherungsaufgabe erstellen
+ButtonOpenLog=                         Öffnen Sie das Sicherungsprotokoll
+
+[PopUpMenu]
+RestoreWin=                 Anwendungsfenster wiederherstellen
+Backup=                                Backup-Datenbank
+Restore=                              Datenbank wiederherstellen
+OpenFolder=                         Öffnen Sie den Sicherungsordner
+QuitApp=                                          Aufhören
+
+[Messages]
+BackupErrorRead=  Sicherungsprotokoll kann nicht geöffnet werden. Die Datei wurde gelöscht oder es wurde noch kein Backup durchgeführt.
+CloseError=  OEClassic muss vor dem Sichern geschlossen werden. Jetzt schließen?
+Error= Fehler
+ErrNotClosed= OEClassic muss vor der Wiederherstellung von Daten geschlossen werden.
+MsgSuccess=   Sicherung abgeschlossen, OEClassic wird neu gestartet
+OEPathMsg=                OEClassic-Pfad nicht gefunden!!!
+StatusBackup=         Bitte warten.....Backup wird erstellt
+SuccessMsg=                                   Erfolg
+SysTrayTooltip=  OE Classic Backup – Klicken Sie für Optionen
+
+[Misc}
+AppRunning= Anwendung läuft bereits!!! Bitte überprüfen Sie die Taskleiste!!!
+DesktopIconText=                     OE Classic Backup
+MsgBackupLocation=            Wählen Sie den Backup-Speicherort:
+TaskName=                            Backup OE Classic
+
+[RestoreMsgs]
+RestoreQuest= Sind Sie sicher, dass Sie eine Wiederherstellung aus einem Backup durchführen möchten?
+Restore=                                      Wiederherstellen
+RestoreBkup=                Wählen Sie die wiederherzustellende Sicherung aus:
+Warning=                                      Warnung
+Warning1= Dadurch werden Ihre aktuellen OEClassic-Daten überschrieben. Sind Sie sicher, dass Sie fortfahren möchten??
+StatusText1=           Bitte warten.....Daten werden wiederhergestellt
+Completed=                          Wiederherstellung abgeschlossen
+Cancelled=                                  Abgesagt
+Cencelled2=  Ihre Wiederherstellungsanfrage wurde abgebrochen.
+
+[LogMessages]
+LogNoPath=                     Kein Sicherungspfad definiert
+LogFailure=  Die Sicherung ist fehlgeschlagen, OE Classic wurde nicht geschlossen.
+LogFailure2= Wiederherstellung fehlgeschlagen, OEClassic wurde nicht geschlossen.
+LogSuccess=    Datenbanksicherung erfolgreich gespeichert 
+LogSuccess2=                       Wiederherstellung erfolgreich
