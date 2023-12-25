@@ -61,3 +61,5 @@ LogFailure=  Back-up mislukt, OE Classic is niet afgesloten.
 LogFailure2= Herstellen mislukt, OE Classic is niet gesloten.
 LogSuccess=    Databaseback-up succesvol opgeslagen in 
 LogSuccess2=                       Herstel succesvol.
+TaskFail= Geplande taak niet gemaakt.
+TaskSucceed= Geplande taak is aangemaakt.

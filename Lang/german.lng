@@ -61,3 +61,5 @@ LogFailure=  Die Sicherung ist fehlgeschlagen, OE Classic wurde nicht geschlosse
 LogFailure2= Wiederherstellung fehlgeschlagen, OEClassic wurde nicht geschlossen.
 LogSuccess=    Datenbanksicherung erfolgreich gespeichert 
 LogSuccess2=                       Wiederherstellung erfolgreich
+TaskFail= Geplante Aufgabe nicht erstellt.
+TaskSucceed= Geplante Aufgabe erfolgreich erstellt.
