@@ -3,6 +3,7 @@
 ;**              by             **
 ;**   Daniel Ford 02/12/2021    **
 ;*********************************
+;FIXME: Right now, once you create the task, you must open it and set it to 'Run only when user is logged on" and uncheck the 'Run with highest priviledges"
 
 ;{ Include external libraries
 XIncludeFile "Includes\MultiLang.pb"
@@ -72,14 +73,18 @@ EndEnumeration
 ;}
 
 ;{ Declare Procedures
+Declare BackupDatabase()
 Declare FindWin(Title$)
+Declare.s GetLocale()
 Declare.s GetPidProcessEx(Name.s)
 Declare WriteLog(filename.s, error.s)
+Declare RunProgramElevated(Exe.s, Parameters.s = "")
 ;}
 
 ;{ Command Line Procedures
 Procedure BackupDatabase()
-Protected GetDate.s, myid, PCName.s, MyName.s
+GetLocale()
+Protected GetDate.s, myid, PCName.s, MyLocation.s, MyName.s, OEInstalled.s, oepath.s
 PCName=GetEnvironmentVariable("COMPUTERNAME")
 MyName=GetEnvironmentVariable("USERNAME")
 If FindWin("OE Classic")
@@ -96,19 +101,14 @@ If MyLocation=""
     MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
      windowfound=0
       End
-  ProcedureReturn
 EndIf
-OEInstalled.s=ReadValue(#HKEY_CURRENT_USER,"\Software\OEClassic","UserDataLocation")
-If OEInstalled<>""
-oepath.s=OEInstalled
-EndIf
+oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
  If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  Else
-   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  EndIf
 While ProgramRunning(myid)
-Debug "Backup Running"
 Wend
 WriteLog("Backup",Language(Language,"LogMessages","LogSuccess")+Chr(34)+MyLocation+Chr(34))
 OpenPreferences("oebackup.prefs")
@@ -126,11 +126,10 @@ Procedure CheckForTask()
 Protected output$, myid, taskfound
 output$=""
 myid=RunProgram("schtasks","/query","",#PB_Program_Open|#PB_Program_Read|#PB_Program_Hide|#PB_Ascii)
-
 If IsProgram(myid)
  While ProgramRunning(myid)
    output$=ReadProgramString(myid)
-  If FindString(output$,Language(Language,"Misc","TaskName"),1,#PB_String_NoCase)
+  If FindString(output$,"BackupOEClassic",1,#PB_String_NoCase)
     taskfound=1
      Break
   Else
@@ -399,72 +398,18 @@ runbackup:
                 windowfound=0
             EndIf
            ClosePreferences()
-
  EndIf
 EndProcedure
 
 Procedure CreateBackupTask()
-OpenFile(0,"MyTask.xml",#PB_Ascii)
-WriteStringN(0,"<?xml version="+Chr(34)+"1.0"+Chr(34)+" encoding="+Chr(34)+"UTF-16"+Chr(34)+"?>",#PB_Ascii)
-WriteStringN(0,"<Task version="+Chr(34)+"1.2"+Chr(34)+" xmlns="+Chr(34)+"http://schemas.microsoft.com/windows/2004/02/mit/task"+Chr(34)+">",#PB_Ascii)
-WriteStringN(0,"<RegistrationInfo>",#PB_Ascii)
-;WriteStringN(0,"<Date>2021-02-21T10:54:55.4869081</Date>",#PB_Ascii)
-WriteStringN(0,"<Author>"+GetEnvironmentVariable("USERNAME")+"</Author>",#PB_Ascii)
-WriteStringN(0,"<URI>\Backup OE Classic</URI>",#PB_Ascii)
-WriteStringN(0,"</RegistrationInfo>",#PB_Ascii)
-WriteStringN(0,"<Triggers>",#PB_Ascii)
-WriteStringN(0,"<CalendarTrigger>",#PB_Ascii)
-WriteStringN(0,"<StartBoundary>"+FormatDate("%yyyy-%mm-%dd",Date())+"T00:00:00-06:00"+"</StartBoundary>",#PB_Ascii)
-;WriteStringN(0,"<StartBoundary>2021-02-26T23:59:00-06:00</StartBoundary>",#PB_Ascii)
-WriteStringN(0,"<ExecutionTimeLimit>PT8H</ExecutionTimeLimit>",#PB_Ascii)
-WriteStringN(0,"<Enabled>true</Enabled>",#PB_Ascii)
-WriteStringN(0,"<ScheduleByWeek>",#PB_Ascii)
-WriteStringN(0,"<DaysOfWeek>",#PB_Ascii)
-WriteStringN(0,"<Saturday />",#PB_Ascii)
-WriteStringN(0,"</DaysOfWeek>",#PB_Ascii)
-WriteStringN(0,"<WeeksInterval>1</WeeksInterval>",#PB_Ascii)
-WriteStringN(0,"</ScheduleByWeek>",#PB_Ascii)
-WriteStringN(0,"</CalendarTrigger>",#PB_Ascii)
-WriteStringN(0,"</Triggers>",#PB_Ascii)
-WriteStringN(0,"<Principals>",#PB_Ascii)
-WriteStringN(0,"<Principal id="+Chr(34)+"Author"+Chr(34)+">",#PB_Ascii)
-WriteStringN(0,"<UserId>"+GetEnvironmentVariable("USERNAME")+"</UserId>",#PB_Ascii)
-WriteStringN(0,"<LogonType>InteractiveToken</LogonType>")
-WriteStringN(0,"<RunLevel>HighestAvailable</RunLevel>",#PB_Ascii)
-WriteStringN(0,"</Principal>",#PB_Ascii)
-WriteStringN(0,"</Principals>",#PB_Ascii)
-WriteStringN(0,"<Settings>",#PB_Ascii)
-WriteStringN(0,"<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>",#PB_Ascii)
-WriteStringN(0,"<DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>",#PB_Ascii)
-WriteStringN(0,"<StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>",#PB_Ascii)
-WriteStringN(0,"<AllowHardTerminate>true</AllowHardTerminate>",#PB_Ascii)
-WriteStringN(0,"<StartWhenAvailable>false</StartWhenAvailable>",#PB_Ascii)
-WriteStringN(0,"<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>",#PB_Ascii)
-WriteStringN(0,"<IdleSettings>",#PB_Ascii)
-WriteStringN(0,"<StopOnIdleEnd>true</StopOnIdleEnd>",#PB_Ascii)
-WriteStringN(0,"<RestartOnIdle>false</RestartOnIdle>",#PB_Ascii)
-WriteStringN(0,"</IdleSettings>",#PB_Ascii)
-WriteStringN(0,"<AllowStartOnDemand>true</AllowStartOnDemand>",#PB_Ascii)
-WriteStringN(0,"<Enabled>true</Enabled>",#PB_Ascii)
-WriteStringN(0,"<Hidden>false</Hidden>",#PB_Ascii)
-WriteStringN(0,"<RunOnlyIfIdle>false</RunOnlyIfIdle>",#PB_Ascii)
-WriteStringN(0,"<WakeToRun>false</WakeToRun>",#PB_Ascii)
-WriteStringN(0,"<ExecutionTimeLimit>PT8H</ExecutionTimeLimit>",#PB_Ascii)
-WriteStringN(0,"<Priority>7</Priority>",#PB_Ascii)
-WriteStringN(0,"</Settings>",#PB_Ascii)
-WriteStringN(0,"<Actions Context="+Chr(34)+"Author"+Chr(34)+">",#PB_Ascii)
-WriteStringN(0,"<Exec>",#PB_Ascii)
-WriteStringN(0,"<Command>"+GetCurrentDirectory()+"OEClassicBackup.exe</Command>",#PB_Ascii)
-WriteStringN(0,"<Arguments>/b</Arguments>",#PB_Ascii)
-WriteStringN(0,"<WorkingDirectory>"+GetCurrentDirectory()+"</WorkingDirectory>",#PB_Ascii)
-WriteStringN(0,"</Exec>",#PB_Ascii)
-WriteStringN(0,"</Actions>",#PB_Ascii)
-WriteStringN(0,"</Task>",#PB_Ascii)
-CloseFile(0)
-Delay(500)
-RunProgram("schtasks","/create /tn "+Chr(34)+"Backup OE Classic"+Chr(34)+" /xml mytask.xml","",#PB_Program_Hide|#PB_Program_Wait)
-  WriteLog("Backup","Scheduled task successfully created.")
-   DeleteFile("MyTask.xml",#PB_FileSystem_Force)
+RunProgramElevated("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /v1")
+ If CheckForTask()=1
+   WriteLog("Backup",Language(Language,"LogMessages","TaskSucceed"))
+    DisableGadget(#Button_SetTask,1)
+ Else
+   WriteLog("Backup",Language(Language,"LogMessages","TaskFail"))
+    MessageRequester(language(Language,"Messages","Error"),language(Language,"LogMessages","TaskFail"))
+ EndIf
 EndProcedure
 
 Procedure OpenBackupLocation()
@@ -520,6 +465,45 @@ Protected myid, restorepath.s
  EndIf
 EndProcedure
 
+Procedure.i RunProgramElevated(Exe.s, Parameters.s = "")
+  Define ExecFile.SHELLEXECUTEINFO
+  Define Result.i, Lib.i, *GetProcessId
+  Define Dir.s = GetPathPart(Exe)
+  
+  ExecFile\cbSize       = SizeOf(ExecFile)
+  ExecFile\fMask        = #SEE_MASK_FLAG_DDEWAIT | #SEE_MASK_NOCLOSEPROCESS
+  ExecFile\hWnd         = 0
+  ExecFile\lpVerb       = @"runas"
+  ExecFile\lpFile       = @Exe
+  ExecFile\lpParameters = @Parameters
+  ExecFile\lpDirectory  = @Dir
+  ExecFile\nShow        = #SW_NORMAL
+  ExecFile\hInstApp     = #Null
+  
+  Result = ShellExecuteEx_(ExecFile)
+
+;Wait for program to exit
+    For i = 1  To 300
+       Delay(1000)  ;check for 300*1000ms if ShellExecute is done
+       If GetExitCodeProcess_(ExecFile\hprocess, @ExitCode)
+         If ExitCode <> #STILL_ACTIVE
+           Break
+         EndIf
+       EndIf
+    Next
+
+ Debug Result
+  If ExecFile\hProcess
+    Lib = OpenLibrary(#PB_Any, "kernel32.dll")
+    If Lib
+      Result = CallFunction(Lib, "GetProcessId", ExecFile\hProcess)
+      CloseLibrary(Lib)
+    EndIf
+  EndIf
+  
+  ProcedureReturn Result
+EndProcedure
+
 Procedure WinCallback(hWnd, uMsg, WParam, LParam) 
   
   Shared uTaskbarRestart
@@ -531,7 +515,7 @@ Procedure WinCallback(hWnd, uMsg, WParam, LParam)
   
   ProcedureReturn #PB_ProcessPureBasicEvents 
   
-EndProcedure 
+EndProcedure
 ;}
 
 ;{ Create Preference File
@@ -598,11 +582,10 @@ GetLocale()
 ;}
 
 ;{ Create Window and Gadgets
-OEInstalled.s=ReadValue(#HKEY_CURRENT_USER,"\Software\OEClassic","UserDataLocation")
-If OEInstalled<>""
-  oepath.s=OEInstalled
+If FileSize(GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic")<>-1
+  oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
 Else
-  MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","OEPathMsg"),#MB_ICONERROR)
+  MessageRequester("Error","OE Classic path not found!!!",#MB_ICONERROR)
    End
 EndIf
 If ProgramParameter()=""
@@ -614,9 +597,9 @@ If ProgramParameter()=""
   If OpenWindow(#Window_Main,0,0,500,200,Language(Language,"MainWindow","WinTitle"),startme|#PB_Window_SystemMenu)
    PanelGadget(#Panel1,5,5,492,170)
     AddGadgetItem(#Panel1,0,Language(Language,"MainWindow","FirstTab"))
-     TextGadget(#Text_Path,205,7,100,20,Language(Language,"MainWindow","OEPath"))
+     TextGadget(#Text_Path,40,7,100,20,Language(Language,"MainWindow","OEPath"))
       StringGadget(#String_Path,40,25,400,20,oepath,#PB_String_ReadOnly)
-       HyperLinkGadget(#Text_BackupPath,160,47,290,20,Language(Language,"MainWindow","BackupLocation"),#Blue)
+       HyperLinkGadget(#Text_BackupPath,40,47,290,20,Language(Language,"MainWindow","BackupLocation"),#Blue)
        GadgetToolTip(#Text_BackupPath,Language(Language,"MainWindow","BackupClearTip"))
         StringGadget(#String_BackupPath,40,67,400,20,MyLocation)
          ButtonGadget(#Button_Backup,0,105,150,30,Language(Language,"MainWindow","ButtonCreateBackup"))
@@ -667,7 +650,7 @@ If ProgramParameter()=""
        StickyWindow(#Window_Main,1)
         flip4=1
     EndIf
-         If CheckForTask()=1;SchedTask=1
+         If CheckForTask()=1
            DisableGadget(#Button_SetTask,1)
          EndIf
           If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
@@ -735,7 +718,7 @@ Select event
         RestoreBackup()
 
       Case #Button_SetBackupPath
-        MyLocation=PathRequester(Language(Language,"Misc","MsgBackupLocation"),GetCurrentDirectory())
+        MyLocation=PathRequester(Language(Language,"Misc","MsgBackupLocation"),GetEnvironmentVariable("homedrive"))
          If MyLocation<>""
            SetGadgetText(#String_BackupPath,MyLocation)
             OpenPreferences("oebackup.prefs")
@@ -745,9 +728,6 @@ Select event
 
        Case #Button_SetTask
          CreateBackupTask()
-          If CheckforTask()=1
-            DisableGadget(#Button_SetTask,1)
-          EndIf
 ;}
 ;{ Checkbox Gadgets
 
@@ -956,7 +936,7 @@ DataSection
     Data.s "AppRunning",                 "Application is already running!!!"+#CRLF$+"Please check the system tray!!!"
     Data.s "DesktopIconText",                                                                     "OE Classic Backup"
     Data.s "MsgBackupLocation",                                                             "Choose Backup Location:"
-    Data.s "TaskName",                                                                            "Backup OE Classic"
+    Data.s "TaskName",                                                                              "BackupOEClassic"
 
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                     "RestoreMsgs"
@@ -979,6 +959,8 @@ DataSection
     Data.s "LogFailure2",                                                "Restore failed, OE Classic was not closed."
     Data.s "LogSuccess",                                                     "Database backup successfully saved to "
     Data.s "LogSuccess2",                                                                       "Restore Successful."
+    Data.s "TaskFail",                                                                  "Scheduled task not created."
+    Data.s "TaskSucceed",                                                      "Scheduled task successfully created."
 
   ;==================================================================================================================
   Data.s "_END_",                                                                                                  ""
@@ -987,10 +969,10 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 122
-; FirstLine = 2
-; Folding = AEAAAAw
+; CursorPosition = 5
+; Folding = AgAAAAg
+; EnableThread
 ; EnableXP
-; EnableAdmin
 ; UseIcon = gfx\icon3.ico
 ; Executable = C:\Temp\OEClassicBackup.exe
+; Debugger = Standalone
