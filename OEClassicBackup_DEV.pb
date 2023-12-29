@@ -3,7 +3,6 @@
 ;**              by             **
 ;**   Daniel Ford 02/12/2021    **
 ;*********************************
-;FIXME: Have to run the schtasks twice to get it working on network drives.
 
 
 ;{ Include external libraries
@@ -919,10 +918,10 @@ DataSection
     Data.s "WinTitle",                                                                            "OE Classic Backup"
     Data.s "FirstTab",                                                                                         "Main"
     Data.s "OEPath",                                                                               "OE Classic Path:"
-    Data.s "BackupLocation",                                                                       "BackUp Location:"
+    Data.s "BackupLocation",                                                                           "BackUp Path:"
     Data.s "BackupClearTip",                                                             "Click to clear backup path"
     Data.s "ButtonCreateBackup",                                                                      "Create Backup"
-    Data.s "ButtonSetLocation",                                                                 "Set Backup Location"
+    Data.s "ButtonSetLocation",                                                                     "Set Backup Path"
     Data.s "ButtonOpenLocation",                                                               "Open Backup Location"
     Data.s "ButtonRestore",                                                                          "Restore Backup"
     Data.s "StatusBarText",                                                                                   "Ready"
@@ -966,7 +965,7 @@ DataSection
   ;==================================================================================================================
     Data.s "AppRunning",                 "Application is already running!!!"+#CRLF$+"Please check the system tray!!!"
     Data.s "DesktopIconText",                                                                     "OE Classic Backup"
-    Data.s "MsgBackupLocation",                                                             "Choose Backup Location:"
+    Data.s "MsgBackupLocation",                                                                 "Choose Backup Path:"
     Data.s "TaskName",                                                                              "BackupOEClassic"
 
   ;==================================================================================================================
@@ -1000,7 +999,7 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 7
+; CursorPosition = 5
 ; Folding = AgAAAAA-
 ; EnableThread
 ; EnableXP
