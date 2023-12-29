@@ -3,7 +3,8 @@
 ;**              by             **
 ;**   Daniel Ford 02/12/2021    **
 ;*********************************
-;FIXME: Right now, once you create the task, you must open it and set it to 'Run only when user is logged on" and uncheck the 'Run with highest priviledges"
+;FIXME: Have to run the schtasks twice to get it working on network drives.
+
 
 ;{ Include external libraries
 XIncludeFile "Includes\MultiLang.pb"
@@ -77,8 +78,8 @@ Declare BackupDatabase()
 Declare FindWin(Title$)
 Declare.s GetLocale()
 Declare.s GetPidProcessEx(Name.s)
-Declare WriteLog(filename.s, error.s)
 Declare RunProgramElevated(Exe.s, Parameters.s = "")
+Declare WriteLog(filename.s, error.s)
 ;}
 
 ;{ Command Line Procedures
@@ -402,7 +403,12 @@ runbackup:
 EndProcedure
 
 Procedure CreateBackupTask()
-RunProgramElevated("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /v1")
+If GetGadgetText(#String_BackupPath)=""
+  MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
+   ProcedureReturn
+EndIf
+RunProgramElevated("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1")
+RunProgramElevated("schtasks","/change /tn BackupOEClassic /rl limited")
  If CheckForTask()=1
    WriteLog("Backup",Language(Language,"LogMessages","TaskSucceed"))
     DisableGadget(#Button_SetTask,1)
@@ -502,6 +508,30 @@ Procedure.i RunProgramElevated(Exe.s, Parameters.s = "")
   EndIf
   
   ProcedureReturn Result
+EndProcedure
+
+Procedure SuperRunas(Username.s,Domain.s,Password.s,CommandLine.s,Argument.s,Wait=#True,LogonWithProfile=1)
+  lpProcessInfo.PROCESS_INFORMATION
+  lpStartUpInfo.STARTUPINFO
+  If OpenLibrary(0,"ADVAPI32.DLL")
+    p.s=GetPathPart(CommandLine)
+   If CallFunction(0,"CreateProcessWithLogonW", @Username, @Domain, @Password,LogonWithProfile, @CommandLine,@Argument,0,0,@p,@lpStartUpInfo,@lpProcessInfo)<>0
+      If Wait
+        ;/ wait until process ends
+        Thread = lpProcessInfo\hThread
+        Repeat
+          Delay(1)
+          GetExitCodeThread_(Thread, @ExitCode.l)
+          If ExitCode <> #STATUS_PENDING
+            CloseLibrary(0)
+            ProcedureReturn lpProcessInfo\hProcess
+          EndIf
+        ForEver
+      EndIf
+    EndIf
+    CloseLibrary(0)
+    ProcedureReturn lpProcessInfo\hProcess
+  EndIf
 EndProcedure
 
 Procedure WinCallback(hWnd, uMsg, WParam, LParam) 
@@ -969,8 +999,9 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 5
-; Folding = AgAAAAg
+; CursorPosition = 406
+; FirstLine = 14
+; Folding = AkABAAg-
 ; EnableThread
 ; EnableXP
 ; UseIcon = gfx\icon3.ico
