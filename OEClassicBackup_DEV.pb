@@ -407,8 +407,7 @@ If GetGadgetText(#String_BackupPath)=""
   MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
    ProcedureReturn
 EndIf
-RunProgramElevated("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1")
-RunProgramElevated("schtasks","/change /tn BackupOEClassic /rl limited")
+RunProgram("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
  If CheckForTask()=1
    WriteLog("Backup",Language(Language,"LogMessages","TaskSucceed"))
     DisableGadget(#Button_SetTask,1)
@@ -700,17 +699,19 @@ If MyLocation<>""
    HideGadget(#Button_OpenBackupLocation,0)
     DisableGadget(#Button_Backup,0)
      DisableGadget(#Button_OpenBackupLocation,0)
-      DisableMenuItem(#Menu_SysTray,#BackupDB,0)
-       DisableMenuItem(#Menu_SysTray,#RestoreDB,0)
-        DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,0)
+      DisableGadget(#Button_RestoreBackup,0)
+       DisableMenuItem(#Menu_SysTray,#BackupDB,0)
+        DisableMenuItem(#Menu_SysTray,#RestoreDB,0)
+         DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,0)
 Else
   HideGadget(#Button_SetBackupPath,0)
    HideGadget(#Button_OpenBackupLocation,1)
     DisableGadget(#Button_Backup,1)
      DisableGadget(#Button_OpenBackupLocation,1)
-      DisableMenuItem(#Menu_SysTray,#BackupDB,1)
-       DisableMenuItem(#Menu_SysTray,#RestoreDB,1)
-        DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,1)
+      DisableGadget(#Button_RestoreBackup,1)
+       DisableMenuItem(#Menu_SysTray,#BackupDB,1)
+        DisableMenuItem(#Menu_SysTray,#RestoreDB,1)
+         DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,1)
 EndIf
 ;}
 
@@ -979,7 +980,7 @@ DataSection
     Data.s "StatusText1",                                                            "Please Wait.....restoring data"
     Data.s "Completed",                                                                           "Restore Completed"
     Data.s "Cancelled",                                                                                   "Cancelled"
-    Data.s "Cencelled2",                                                   "Your restore request has been cancelled."
+    Data.s "Cancelled2",                                                   "Your restore request has been cancelled."
 
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                     "LogMessages"
@@ -999,9 +1000,8 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 406
-; FirstLine = 14
-; Folding = AkABAAg-
+; CursorPosition = 7
+; Folding = AgAAAAA-
 ; EnableThread
 ; EnableXP
 ; UseIcon = gfx\icon3.ico
