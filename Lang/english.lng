@@ -1,0 +1,88 @@
+[MainWindow]
+WinTitle=                                                                                 OE Classic Backup
+FirstTab=                                                                                              Main
+OEPath=                                                                                    OE Classic Path:
+BackupLocation=                                                                                BackUp Path:
+BackupClearTip=                                                                  Click to clear backup path
+ButtonCreateBackup=                                                                           Create Backup
+ButtonSetLocation=                                                                          Set Backup Path
+ButtonOpenLocation=                                                                        Open Backup Path
+ButtonRestore=                                                                               Restore Backup
+StatusBarText=                                                                                        Ready
+
+[OptionsWindow]
+SecondTab=                                                                                          Options
+CheckClose=                                                                                   Close to Tray
+CheckRestartOE=                                                  Restart OE Classic after backup completion
+CheckStartInTray=                                                          Start Application in System Tray
+CheckStayOnTop=                                                                                 Stay on Top
+ButtonDesktopShortcut=                                                              Create Desktop Shortcut
+ButtonOpenLog=                                                                              Open Backup Log
+
+[TaskWindow]
+ThirdTab=                                                                                       Backup Task
+ButtonCreateTask=                                                                               Create Task
+ButtonDeleteTask=                                                                               Remove Task
+TaskName=                                                                                   BackupOEClassic
+TaskFrame=                                                                                    Task Settings
+OptionDaily=                                                                                          Daily
+OptionWeekly=                                                                                        Weekly
+OptionMonthly=                                                                                      Monthly
+ValidTime=                                                              (Valid time is from 00:00 to 23:59)
+OptionSunday=                                                                                           Sun
+OptionMonday=                                                                                           Mon
+OptionTuesday=                                                                                          Tue 
+OptionWednesday=                                                                                        Wed
+OptionThursday=                                                                                         Thu
+OptionFriday=                                                                                           Fri
+OptionSaturday=                                                                                         Sat
+OptionFirst=                                                                                            1st
+OptionSecond=                                                                                           2nd
+OptionThird=                                                                                            3rd
+OptionFourth=                                                                                           4th
+OptionLast=                                                                                            Last
+OptionLastDay=                                                                                     Last Day
+
+[PopUpMenu]
+RestoreWin=                                                                      Restore Application Window
+Backup=                                                                                     Backup Database
+Restore=                                                                                   Restore Database
+OpenFolder=                                                                              Open Backup Folder
+QuitApp=                                                                                               Quit
+
+[Messages]
+BackupErrorRead=                        Cannot open backup log. File has been deleted or no backup ran yet.
+CloseError=                                      OE Classic must be closed before backing up. Close it now?
+Error=                                                                                                Error
+ErrNotClosed=                                              OE Classic must be closed before restoring data.
+MsgSuccess=                                                        Backup Completed, Re-starting OE Classic
+OEPathMsg=                                                                     OE Classic path not found!!!
+StatusBackup=                                                               Please wait.....creating backup
+SuccessMsg=                                                                                         Success
+SysTrayTooltip=                                                       OE Classic Backup - Click for Options
+
+[Misc]
+AppRunning=                               Application is already running!!! Please check the system tray!!!
+DesktopIconText=                                                                          OE Classic Backup
+MsgBackupLocation=                                                                  Choose Backup Location:
+TaskName=                                                                                   BackupOEClassic
+
+[RestoreMsgs]
+RestoreQuest=                                               Are you sure you wish to restore from a backup?
+Restore=                                                                                            Restore
+RestoreBkup=                                                                      Select backup to restore:
+Warning=                                                                                            Warning
+Warning1=              This will overwrite your current OE Classic Data. Are you sure you wish to continue?
+StatusText1=                                                                 Please Wait.....restoring data
+Completed=                                                                                Restore Completed
+Cancelled=                                                                                        Cancelled
+Cancelled2=                                                        Your restore request has been cancelled.
+
+[LogMessages]
+LogNoPath=                                                                          No backup path defined.
+LogFailure=                                                       Backup failed, OE Classic was not closed.
+LogFailure2=                                                     Restore failed, OE Classic was not closed.
+LogSuccess=                                                          Database backup successfully saved to 
+LogSuccess2=                                                                            Restore Successful.
+TaskFail=                                                                       Scheduled task not created.
+TaskSucceed=                                                           Scheduled task successfully created.
