@@ -34,35 +34,63 @@ Global windowfound
 Global ProcessFirst.ProcessFirst
 Global ProcessNext.ProcessNext
 Global Language.Language
+Global schedule.s, day.s, hour.s, minute.s, scheduledday.s
 ;}
 
 ;{ Window/Gadget Enumeration
 Enumeration
 #Window_Main
 #Panel1
+#StatusBar
+;Main Tab
 #Text_Path
 #String_Path
 #Text_BackupPath
 #String_BackupPath
 #Button_Backup
-#Button_CreateDesktopIcon
-#Button_OpenBackupLocation
-#Button_OpenBackupLog
-#Button_RestoreBackup
 #Button_SetBackupPath
-#Button_SetTask
+#Button_OpenBackupLocation
+#Button_RestoreBackup
+;OptionsTab
 #Checkbox_CloseToTray
 #Checkbox_RestartOEClassic
 #Checkbox_StartInTray
-#Checkbox_StartWithLogon
 #Checkbox_StayOnTop
-#StatusBar
+#Button_CreateDesktopIcon
+#Button_OpenBackupLog
+;Task Tab
+#Frame_TaskSettings
+#Option_Daily
+#Option_Weekly
+#Option_Monthly
+#Option_Sun
+#Option_Mon
+#Option_Tue
+#Option_Wed
+#Option_Thu
+#Option_Fri
+#Option_Sat
+#Option_First
+#Option_Second
+#Option_Third
+#Option_Fourth
+#Option_Last
+#Option_LastDay
+#SpinGadget_Hour
+#TextGadget_Colon
+#SpinGadget_Minute
+#Text_Time
+#Text_Month
+#Button_CreateTask
+#Button_DeleteTask
+;Pop-Up Menu
 #Menu_SysTray
 #RestoreApp
 #BackupDB
 #RestoreDB
 #OpenBackupFolder
 #QuitApp
+;Pop-Up Menu Icons
 #Icon_SysTray
 #Icon_RestoreApp
 #Icon_BackupDB
@@ -77,7 +105,6 @@ Declare BackupDatabase()
 Declare FindWin(Title$)
 Declare.s GetLocale()
 Declare.s GetPidProcessEx(Name.s)
-Declare RunProgramElevated(Exe.s, Parameters.s = "")
 Declare WriteLog(filename.s, error.s)
 ;}
 
@@ -98,7 +125,7 @@ ClosePreferences()
 If MyLocation=""
   WriteLog("Backup",Language(Language,"LogMessages","LogNoPath"))
    HideWindow(#Window_Main,0)
-    MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
+    MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","OEPathMsg"),#MB_ICONERROR)
      windowfound=0
       End
 EndIf
@@ -129,7 +156,7 @@ myid=RunProgram("schtasks","/query","",#PB_Program_Open|#PB_Program_Read|#PB_Pro
 If IsProgram(myid)
  While ProgramRunning(myid)
    output$=ReadProgramString(myid)
-  If FindString(output$,"BackupOEClassic",1,#PB_String_NoCase)
+  If FindString(output$,Language(Language,"TaskWindow","TaskName"),1,#PB_String_NoCase);"BackupOEClassic",1,#PB_String_NoCase)
     taskfound=1
      Break
   Else
@@ -401,15 +428,49 @@ runbackup:
  EndIf
 EndProcedure
 
-Procedure CreateBackupTask()
+Procedure CreateBackupTask(schedule.s, day.s, scheduledday.s, hour.s, minute.s)
 If GetGadgetText(#String_BackupPath)=""
   MessageRequester(Language(Language,"Messages","Error"),Language(Language,"LogMessages","LogNoPath"),#MB_ICONERROR)
    ProcedureReturn
 EndIf
-RunProgram("schtasks","/create /sc weekly /d sat /st 00:00 /tn BackupOEClassic /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
+If schedule = "Daily"
+  RunProgram("schtasks","/create /sc daily /st "+hour+":"+minute+" /tn "+Language(Language,"TaskWindow","TaskName")+" /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
+ElseIf schedule = "Monthly"
+  If scheduledday.s="";1st day of every month
+    RunProgram("schtasks","/create /sc monthly /st "+hour+":"+minute+" /tn "+Language(Language,"TaskWindow","TaskName")+" /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)    
+  ElseIf scheduledday.s<>"LastDay";chosen day (ex: 1st sun of every month)
+    RunProgram("schtasks","/create /sc monthly /d "+day+" /mo "+scheduledday+" /st "+hour+":"+minute+" /tn "+Language(Language,"TaskWindow","TaskName")+" /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
+  Else;last day of every month
+    RunProgram("schtasks","/create /sc monthly /mo lastday /m * /st "+hour+":"+minute+" /tn "+Language(Language,"TaskWindow","TaskName")+" /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
+  EndIf
+Else ;schedule=Weekly
+  RunProgram("schtasks","/create /sc "+schedule+" /d "+day+" /st "+hour+":"+minute+" /tn "+Language(Language,"TaskWindow","TaskName")+" /tr "+Chr(34)+GetCurrentDirectory()+"OEClassicBackup /b"+Chr(34)+" /it /v1","",#PB_Program_Wait)
+EndIf
  If CheckForTask()=1
    WriteLog("Backup",Language(Language,"LogMessages","TaskSucceed"))
-    DisableGadget(#Button_SetTask,1)
+    DisableGadget(#Option_Daily,1)
+     DisableGadget(#Option_Weekly,1)
+      DisableGadget(#Option_Monthly,1)
+       DisableGadget(#Option_Sun,1)
+        DisableGadget(#Option_Mon,1)
+         DisableGadget(#Option_Tue,1)
+          DisableGadget(#Option_Wed,1)
+           DisableGadget(#Option_Thu,1)
+            DisableGadget(#Option_Fri,1)
+             DisableGadget(#Option_Sat,1)
+            DisableGadget(#Option_First,1)
+           DisableGadget(#Option_Second,1)
+          DisableGadget(#Option_Third,1)
+         DisableGadget(#Option_Fourth,1)
+        DisableGadget(#Option_Last,1)
+       DisableGadget(#Option_LastDay,1)
+      DisableGadget(#SpinGadget_Hour,1)
+     DisableGadget(#TextGadget_Colon,1)
+    DisableGadget(#SpinGadget_Minute,1)
+   DisableGadget(#Button_CreateTask,1)
+  DisableGadget(#Text_Time,1)
+  HideGadget(#Text_Month,1)
+ HideGadget(#Button_DeleteTask,0)
  Else
    WriteLog("Backup",Language(Language,"LogMessages","TaskFail"))
     MessageRequester(language(Language,"Messages","Error"),language(Language,"LogMessages","TaskFail"))
@@ -467,69 +528,6 @@ Protected myid, restorepath.s
     MessageRequester(Language(Language,"RestoreMsgs","Cancelled"),Language(Language,"RestoreMsgs","Cancelled2"),#MB_ICONINFORMATION)
   EndIf
  EndIf
-EndProcedure
-
-Procedure.i RunProgramElevated(Exe.s, Parameters.s = "")
-  Define ExecFile.SHELLEXECUTEINFO
-  Define Result.i, Lib.i, *GetProcessId
-  Define Dir.s = GetPathPart(Exe)
-  
-  ExecFile\cbSize       = SizeOf(ExecFile)
-  ExecFile\fMask        = #SEE_MASK_FLAG_DDEWAIT | #SEE_MASK_NOCLOSEPROCESS
-  ExecFile\hWnd         = 0
-  ExecFile\lpVerb       = @"runas"
-  ExecFile\lpFile       = @Exe
-  ExecFile\lpParameters = @Parameters
-  ExecFile\lpDirectory  = @Dir
-  ExecFile\nShow        = #SW_NORMAL
-  ExecFile\hInstApp     = #Null
-  
-  Result = ShellExecuteEx_(ExecFile)
-
-;Wait for program to exit
-    For i = 1  To 300
-       Delay(1000)  ;check for 300*1000ms if ShellExecute is done
-       If GetExitCodeProcess_(ExecFile\hprocess, @ExitCode)
-         If ExitCode <> #STILL_ACTIVE
-           Break
-         EndIf
-       EndIf
-    Next
-
- Debug Result
-  If ExecFile\hProcess
-    Lib = OpenLibrary(#PB_Any, "kernel32.dll")
-    If Lib
-      Result = CallFunction(Lib, "GetProcessId", ExecFile\hProcess)
-      CloseLibrary(Lib)
-    EndIf
-  EndIf
-  
-  ProcedureReturn Result
-EndProcedure
-
-Procedure SuperRunas(Username.s,Domain.s,Password.s,CommandLine.s,Argument.s,Wait=#True,LogonWithProfile=1)
-  lpProcessInfo.PROCESS_INFORMATION
-  lpStartUpInfo.STARTUPINFO
-  If OpenLibrary(0,"ADVAPI32.DLL")
-    p.s=GetPathPart(CommandLine)
-   If CallFunction(0,"CreateProcessWithLogonW", @Username, @Domain, @Password,LogonWithProfile, @CommandLine,@Argument,0,0,@p,@lpStartUpInfo,@lpProcessInfo)<>0
-      If Wait
-        ;/ wait until process ends
-        Thread = lpProcessInfo\hThread
-        Repeat
-          Delay(1)
-          GetExitCodeThread_(Thread, @ExitCode.l)
-          If ExitCode <> #STATUS_PENDING
-            CloseLibrary(0)
-            ProcedureReturn lpProcessInfo\hProcess
-          EndIf
-        ForEver
-      EndIf
-    EndIf
-    CloseLibrary(0)
-    ProcedureReturn lpProcessInfo\hProcess
-  EndIf
 EndProcedure
 
 Procedure WinCallback(hWnd, uMsg, WParam, LParam) 
@@ -593,6 +591,13 @@ StayOnTop=ReadPreferenceInteger("StayOnTop",0)
 ClosePreferences()
 ;}
 
+;{ Check for Lang folder and set language
+If FileSize(GetCurrentDirectory()+"Lang")=-1
+ MessageRequester("Error","Language folder missing, defaulting to English.",#MB_ICONWARNING)
+EndIf
+GetLocale()
+;}
+
 ;{ Create mutex
 MutexID=CreateMutex_(0,1,"OE Classic Backup")
 MutexError=GetLastError_()
@@ -602,18 +607,11 @@ If MutexID=0 Or MutexError<>0
 EndIf
 ;}
 
-;{ Check for Lang folder and set language
-If FileSize(GetCurrentDirectory()+"Lang")=-1
- MessageRequester("Error","Language folder missing, defaulting to English.",#MB_ICONWARNING)
-EndIf
-GetLocale()
-;}
-
 ;{ Create Window and Gadgets
-If FileSize(GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic")<>-1
-  oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
+If FileSize(GetEnvironmentVariable("userprofile")+"\AppData\Local\OEClassic")<>-1
+  oepath.s=GetEnvironmentVariable("userprofile")+"\AppData\Local\OEClassic"
 Else
-  MessageRequester("Error","OE Classic path not found!!!",#MB_ICONERROR)
+  MessageRequester(Language(Language,"Messages","Error"),Language(Language,"Messages","OEPathMsg"),#MB_ICONERROR)
    End
 EndIf
 If ProgramParameter()=""
@@ -639,15 +637,59 @@ If ProgramParameter()=""
            StatusBarText(#StatusBar,0,Language(Language,"MainWindow","StatusBarText"),#PB_StatusBar_Center)
     CloseGadgetList()
     OpenGadgetList(#Panel1)
-     AddGadgetItem(#Panel1,1,Language(Language,"OptionsWindow","SecondTab"));"Options")
+     AddGadgetItem(#Panel1,1,Language(Language,"OptionsWindow","SecondTab"));Options
       CheckBoxGadget(#Checkbox_CloseToTray,20,10,400,20,Language(Language,"OptionsWindow","CheckClose")); Flip1
       CheckBoxGadget(#Checkbox_RestartOEClassic,20,30,400,20,Language(Language,"OptionsWindow","CheckRestartOE"));Flip2
       CheckBoxGadget(#Checkbox_StartInTray,20,50,400,20,Language(Language,"OptionsWindow","CheckStartInTray"));Flip3
       CheckBoxGadget(#Checkbox_StayOnTop,20,70,400,20,Language(Language,"OptionsWindow","CheckStayOnTop"));Flip4
-       ButtonGadget(#Button_CreateDesktopIcon,0,115,155,22,Language(Language,"OptionsWindow","ButtonDesktopShortcut"))
-       ButtonGadget(#Button_SetTask,164,115,155,22,Language(Language,"OptionsWindow","ButtonCreateTask"))
-       ButtonGadget(#Button_OpenBackupLog,328,115,155,22,Language(Language,"OptionsWindow","ButtonOpenLog"))
+       ButtonGadget(#Button_CreateDesktopIcon,0,105,155,30,Language(Language,"OptionsWindow","ButtonDesktopShortcut"))
+       ButtonGadget(#Button_OpenBackupLog,328,105,155,30,Language(Language,"OptionsWindow","ButtonOpenLog"))
     CloseGadgetList()
+    OpenGadgetList(#Panel1)
+     AddGadgetItem(#Panel1,2,Language(Language,"TaskWindow","ThirdTab"));Backup Task
+       FrameGadget(#Frame_TaskSettings,5,5,475,95,Language(Language,"TaskWindow","TaskFrame"))
+        OptionGadget(#Option_Daily,20,25,100,20,Language(Language,"TaskWindow","OptionDaily"))
+         SetGadgetState(#Option_Daily,1)
+        OptionGadget(#Option_Weekly,20,50,100,20,Language(Language,"TaskWindow","OptionWeekly"))
+        OptionGadget(#Option_Monthly,20,75,100,20,Language(Language,"TaskWindow","OptionMonthly"))
+         SpinGadget(#SpinGadget_Hour,130,70,50,23,0,23,#PB_Spin_Numeric)
+          SetGadgetText(#SpinGadget_Hour,"0")
+           TextGadget(#TextGadget_Colon,190,70,5,20,":")
+         SpinGadget(#SpinGadget_Minute,200,70,50,23,0,59,#PB_Spin_Numeric)
+          SetGadgetText(#SpinGadget_Minute,"0")
+           TextGadget(#Text_Time,255,75,200,20,Language(Language,"TaskWindow","ValidTime"))
+            TextGadget(#Text_Month,20,100,250,30,Language(Language,"TaskWindow","TextMonth"))
+             HideGadget(#Text_Month,1)
+        OptionGadget(#Option_Sun,130,25,50,20,Language(Language,"TaskWindow","OptionSunday"))
+        OptionGadget(#Option_Mon,180,25,50,20,Language(Language,"TaskWindow","OptionMonday"))
+        OptionGadget(#Option_Tue,230,25,50,20,Language(Language,"TaskWindow","OptionTuesday"))
+        OptionGadget(#Option_Wed,280,25,50,20,Language(Language,"TaskWindow","OptionWednesday"))
+        OptionGadget(#Option_Thu,330,25,50,20,Language(Language,"TaskWindow","OptionThursday"))
+        OptionGadget(#Option_Fri,380,25,50,20,Language(Language,"TaskWindow","OptionFriday"))
+        OptionGadget(#Option_Sat,430,25,45,20,Language(Language,"TaskWindow","OptionSaturday"))
+         ButtonGadget(#Button_CreateTask,328,105,155,30,Language(Language,"TaskWindow","ButtonCreateTask"))
+         ButtonGadget(#Button_DeleteTask,0,105,150,30,Language(Language,"TaskWindow","ButtonDeleteTask"))
+          HideGadget(#Button_DeleteTask,1)
+        OptionGadget(#Option_First,130,50,50,20,Language(Language,"TaskWindow","OptionFirst"))
+        OptionGadget(#Option_Second,180,50,50,20,Language(Language,"TaskWindow","OptionSecond"))
+        OptionGadget(#Option_Third,230,50,50,20,Language(Language,"TaskWindow","OptionThird"))
+        OptionGadget(#Option_Fourth,280,50,50,20,Language(Language,"TaskWindow","OptionFourth"))
+        OptionGadget(#Option_Last,330,50,50,20,Language(Language,"TaskWindow","OptionLast"))
+        OptionGadget(#Option_LastDay,380,50,80,20,Language(Language,"TaskWindow","OptionLastDay"))
+    CloseGadgetList()
+       DisableGadget(#Option_Sun,1)
+        DisableGadget(#Option_Mon,1)
+         DisableGadget(#Option_Tue,1)
+          DisableGadget(#Option_Wed,1)
+           DisableGadget(#Option_Thu,1)
+            DisableGadget(#Option_Fri,1)
+             DisableGadget(#Option_Sat,1)
+            DisableGadget(#Option_First,1)
+           DisableGadget(#Option_Second,1)
+          DisableGadget(#Option_Third,1)
+         DisableGadget(#Option_Fourth,1)
+        DisableGadget(#Option_Last,1)
+       DisableGadget(#Option_LastDay,1)
   If CreatePopupImageMenu(#Menu_SysTray);System Tray Menu
     MenuItem(#RestoreApp,Language(Language,"PopUpMenu","RestoreWin"),CatchImage(#Icon_RestoreApp,?Icon_RestoreApp))
     MenuBar()
@@ -657,6 +699,7 @@ If ProgramParameter()=""
     MenuBar()
         MenuItem(#QuitApp,Language(Language,"PopUpMenu","QuitApp"),CatchImage(#Icon_Quit,?Icon_Quit))
   EndIf
+;{ Read Preferences/Disable TaskTab Gadgets
     If CloseToTray=1
       SetGadgetState(#Checkbox_CloseToTray,#PB_Checkbox_Checked)
        flip1=1
@@ -679,11 +722,34 @@ If ProgramParameter()=""
         flip4=1
     EndIf
          If CheckForTask()=1
-           DisableGadget(#Button_SetTask,1)
+             DisableGadget(#Option_Daily,1)
+              DisableGadget(#Option_Weekly,1)
+               DisableGadget(#Option_Monthly,1)
+                DisableGadget(#Option_Sun,1)
+                 DisableGadget(#Option_Mon,1)
+                  DisableGadget(#Option_Tue,1)
+                   DisableGadget(#Option_Wed,1)
+                    DisableGadget(#Option_Thu,1)
+                     DisableGadget(#Option_Fri,1)
+                      DisableGadget(#Option_Sat,1)
+                       DisableGadget(#Option_First,1)
+                      DisableGadget(#Option_Second,1)
+                     DisableGadget(#Option_Third,1)
+                    DisableGadget(#Option_Fourth,1)
+                   DisableGadget(#Option_Last,1)
+                  DisableGadget(#Option_LastDay,1)
+                 DisableGadget(#SpinGadget_Hour,1)
+                DisableGadget(#TextGadget_Colon,1)
+               DisableGadget(#SpinGadget_Minute,1)
+              DisableGadget(#Text_Time,1)
+             DisableGadget(#Button_CreateTask,1)
+            
+            HideGadget(#Button_DeleteTask,0)
          EndIf
           If FileSize(GetEnvironmentVariable("userprofile")+"\Desktop\OE Classic Backup.lnk")<>-1
             DisableGadget(#Button_CreateDesktopIcon,1)
           EndIf
+;}
          SetWindowCallback(@WinCallback()); Activate the callback
   EndIf
 EndIf
@@ -702,6 +768,7 @@ If MyLocation<>""
        DisableMenuItem(#Menu_SysTray,#BackupDB,0)
         DisableMenuItem(#Menu_SysTray,#RestoreDB,0)
          DisableMenuItem(#Menu_SysTray,#OpenBackupFolder,0)
+
 Else
   HideGadget(#Button_SetBackupPath,0)
    HideGadget(#Button_OpenBackupLocation,1)
@@ -756,11 +823,51 @@ Select event
             ClosePreferences()
          EndIf
 
-       Case #Button_SetTask
-         CreateBackupTask()
+       Case #Button_CreateTask
+         starthour.s=GetGadgetText(#SpinGadget_Hour)
+          If Len(starthour)<2
+            thehour.s=Left(starthour,1)
+             hour.s=InsertString(thehour,"0",1)
+          Else
+            hour=starthour
+          EndIf
+          startminute.s=GetGadgetText(#SpinGadget_Minute)
+          If Len(startminute)<2
+            minute.s=InsertString(startminute,"0",1)
+          Else
+            minute=startminute
+          EndIf
+         CreateBackupTask(schedule.s, day.s, scheduledday.s, hour.s, minute.s)
+
+       Case #Button_DeleteTask
+         RunProgram("schtasks","/delete /tn "+Language(Language,"TaskWindow","TaskName")+" /f","",#PB_Program_Wait)
+          If CheckForTask()=0
+            DisableGadget(#Option_Daily,0)
+             DisableGadget(#Option_Weekly,0)
+              DisableGadget(#Option_Monthly,0)
+               DisableGadget(#Option_Sun,0)
+                DisableGadget(#Option_Mon,0)
+                 DisableGadget(#Option_Tue,0)
+                  DisableGadget(#Option_Wed,0)
+                   DisableGadget(#Option_Thu,0)
+                    DisableGadget(#Option_Fri,0)
+                     DisableGadget(#Option_Sat,0)
+                      DisableGadget(#Option_First,0)
+                       DisableGadget(#Option_Second,0)
+                      DisableGadget(#Option_Third,0)
+                     DisableGadget(#Option_Fourth,0)
+                    DisableGadget(#Option_Last,0)
+                   DisableGadget(#Option_LastDay,0)
+                  DisableGadget(#SpinGadget_Hour,0)
+                 DisableGadget(#TextGadget_Colon,0)
+                DisableGadget(#SpinGadget_Minute,0)
+               DisableGadget(#Button_CreateTask,0)
+              DisableGadget(#Text_Time,0)
+             DisableGadget(#Text_Month,0)
+            HideGadget(#Button_DeleteTask,1)
+          EndIf
 ;}
 ;{ Checkbox Gadgets
-
       Case #Checkbox_CloseToTray; Flip1
         flip1=1-flip1
         If flip1=1
@@ -810,6 +917,85 @@ Select event
           ClosePreferences()
            StickyWindow(#Window_Main,0)
         EndIf
+;}
+;{ Option Gadgets
+      Case #Option_Sun
+        day="Sun"
+      Case #Option_Mon
+        day="Mon"
+      Case #Option_Tue
+        day="Tue"
+      Case #Option_Wed
+        day="Wed"
+      Case #Option_Thu
+        day="Thu"
+      Case #Option_Fri
+        day="Fri"
+      Case #Option_Sat
+        day="Sat"
+      Case #Option_First
+        scheduledday="First"
+      Case #Option_Second
+        scheduledday="Second"
+      Case #Option_Third
+        scheduledday="Third"
+      Case #Option_Fourth
+        scheduledday="Fourth"
+      Case #Option_Last
+        scheduledday="Last"
+      Case #Option_LastDay
+        scheduledday="LastDay"
+      Case #Option_Daily
+        schedule="Daily"
+         DisableGadget(#Option_Sun,1)
+          DisableGadget(#Option_Mon,1)
+           DisableGadget(#Option_Tue,1)
+            DisableGadget(#Option_Wed,1)
+             DisableGadget(#Option_Thu,1)
+              DisableGadget(#Option_Fri,1)
+               DisableGadget(#Option_Sat,1)
+                DisableGadget(#Option_First,1)
+                 DisableGadget(#Option_Second,1)
+                  DisableGadget(#Option_Third,1)
+                   DisableGadget(#Option_Fourth,1)
+                    DisableGadget(#Option_Last,1)
+                     DisableGadget(#Option_LastDay,1)
+                      HideGadget(#Text_Month,1)
+
+      Case #Option_Weekly
+        schedule="Weekly"
+         DisableGadget(#Option_Sun,0)
+          DisableGadget(#Option_Mon,0)
+           DisableGadget(#Option_Tue,0)
+            DisableGadget(#Option_Wed,0)
+             DisableGadget(#Option_Thu,0)
+              DisableGadget(#Option_Fri,0)
+               DisableGadget(#Option_Sat,0)
+                DisableGadget(#Option_First,1)
+                 DisableGadget(#Option_Second,1)
+                  DisableGadget(#Option_Third,1)
+                   DisableGadget(#Option_Fourth,1)
+                    DisableGadget(#Option_Last,1)
+                     DisableGadget(#Option_LastDay,1)
+                      HideGadget(#Text_Month,1)
+
+      Case #Option_Monthly
+        schedule="Monthly"
+         DisableGadget(#Option_Sun,0)
+          DisableGadget(#Option_Mon,0)
+           DisableGadget(#Option_Tue,0)
+            DisableGadget(#Option_Wed,0)
+             DisableGadget(#Option_Thu,0)
+              DisableGadget(#Option_Fri,0)
+               DisableGadget(#Option_Sat,0)
+                DisableGadget(#Option_First,0)
+                 DisableGadget(#Option_Second,0)
+                  DisableGadget(#Option_Third,0)
+                   DisableGadget(#Option_Fourth,0)
+                    DisableGadget(#Option_Last,0)
+                     DisableGadget(#Option_LastDay,0)
+                      HideGadget(#Text_Month,0)
+
 ;}
 ;{ Text Gadgets
       Case #Text_BackupPath
@@ -922,7 +1108,7 @@ DataSection
     Data.s "BackupClearTip",                                                             "Click to clear backup path"
     Data.s "ButtonCreateBackup",                                                                      "Create Backup"
     Data.s "ButtonSetLocation",                                                                     "Set Backup Path"
-    Data.s "ButtonOpenLocation",                                                               "Open Backup Location"
+    Data.s "ButtonOpenLocation",                                                                   "Open Backup Path"
     Data.s "ButtonRestore",                                                                          "Restore Backup"
     Data.s "StatusBarText",                                                                                   "Ready"
 
@@ -935,9 +1121,34 @@ DataSection
     Data.s "CheckStartInTray",                                                     "Start Application in System Tray"
     Data.s "CheckStayOnTop",                                                                            "Stay on Top"
     Data.s "ButtonDesktopShortcut",                                                         "Create Desktop Shortcut"
-    Data.s "ButtonCreateTask",                                                                   "Create Backup Task"
     Data.s "ButtonOpenLog",                                                                         "Open Backup Log"
 
+  ;==================================================================================================================
+  Data.s "_GROUP_",                                                                                      "TaskWindow"
+  ;==================================================================================================================
+    Data.s "ThirdTab",                                                                                  "Backup Task"
+    Data.s "ButtonCreateTask",                                                                          "Create Task"
+    Data.s "ButtonDeleteTask",                                                                          "Remove Task"
+    Data.s "TaskName",                                                                              "BackupOEClassic"
+    Data.s "TaskFrame",                                                                               "Task Settings"
+    Data.s "OptionDaily",                                                                                     "Daily"
+    Data.s "OptionWeekly",                                                                                   "Weekly"
+    Data.s "OptionMonthly",                                                                                 "Monthly"
+    Data.s "TextMonth",                                 "Select time, but leave all else blank for 1st of each month"
+    Data.s "ValidTime",                                                         "(Valid time is from 00:00 to 23:59)"
+    Data.s "OptionSunday",                                                                                      "Sun"
+    Data.s "OptionMonday",                                                                                      "Mon"
+    Data.s "OptionTuesday",                                                                                     "Tue"
+    Data.s "OptionWednesday",                                                                                   "Wed"
+    Data.s "OptionThursday",                                                                                    "Thu"
+    Data.s "OptionFriday",                                                                                      "Fri"
+    Data.s "OptionSaturday",                                                                                    "Sat"
+    Data.s "OptionFirst",                                                                                       "1st"
+    Data.s "OptionSecond",                                                                                      "2nd"
+    Data.s "OptionThird",                                                                                       "3rd"
+    Data.s "OptionFourth",                                                                                      "4th"
+    Data.s "OptionLast",                                                                                       "Last"
+    Data.s "OptionLastDay",                                                                                "Last Day"
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                       "PopUpMenu"
   ;==================================================================================================================
@@ -950,8 +1161,8 @@ DataSection
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                        "Messages"
   ;==================================================================================================================
-    Data.s "BackupErrorRead",          "Cannot open backup log."+#CRLF$+"File has been deleted or no backup ran yet."
-    Data.s "CloseError",                        "OE Classic must be closed before backing up."+#CRLF$+"Close it now?"
+    Data.s "BackupErrorRead",                   "Cannot open backup log. File has been deleted or no backup ran yet."
+    Data.s "CloseError",                                 "OE Classic must be closed before backing up. Close it now?"
     Data.s "Error",                                                                                           "Error"
     Data.s "ErrNotClosed",                                         "OE Classic must be closed before restoring data."
     Data.s "MsgSuccess",                                                   "Backup Completed, Re-starting OE Classic"
@@ -963,9 +1174,9 @@ DataSection
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                            "Misc"
   ;==================================================================================================================
-    Data.s "AppRunning",                 "Application is already running!!!"+#CRLF$+"Please check the system tray!!!"
+    Data.s "AppRunning",                          "Application is already running!!! Please check the system tray!!!"
     Data.s "DesktopIconText",                                                                     "OE Classic Backup"
-    Data.s "MsgBackupLocation",                                                                 "Choose Backup Path:"
+    Data.s "MsgBackupLocation",                                                             "Choose Backup Location:"
     Data.s "TaskName",                                                                              "BackupOEClassic"
 
   ;==================================================================================================================
@@ -975,7 +1186,7 @@ DataSection
     Data.s "Restore",                                                                                       "Restore"
     Data.s "RestoreBkup",                                                                 "Select backup to restore:"
     Data.s "Warning",                                                                                       "Warning"
-    Data.s "Warning1","This will overwrite your current OE Classic Data."+#CRLF$+"Are you sure you wish to continue?"
+    Data.s "Warning1",         "This will overwrite your current OE Classic Data. Are you sure you wish to continue?"
     Data.s "StatusText1",                                                            "Please Wait.....restoring data"
     Data.s "Completed",                                                                           "Restore Completed"
     Data.s "Cancelled",                                                                                   "Cancelled"
@@ -999,10 +1210,11 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 5
+; CursorPosition = 6
 ; Folding = AgAAAAA-
 ; EnableThread
 ; EnableXP
+; DPIAware
 ; UseIcon = gfx\icon3.ico
 ; Executable = C:\Temp\OEClassicBackup.exe
 ; Debugger = Standalone
