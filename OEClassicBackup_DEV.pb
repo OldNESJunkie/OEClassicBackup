@@ -1106,10 +1106,10 @@ DataSection
     Data.s "OEPath",                                                                               "OE Classic Path:"
     Data.s "BackupLocation",                                                                           "BackUp Path:"
     Data.s "BackupClearTip",                                                             "Click to clear backup path"
-    Data.s "ButtonCreateBackup",                                                                      "Create Backup"
+    Data.s "ButtonCreateBackup",                                                                             "Backup"
     Data.s "ButtonSetLocation",                                                                     "Set Backup Path"
     Data.s "ButtonOpenLocation",                                                                   "Open Backup Path"
-    Data.s "ButtonRestore",                                                                          "Restore Backup"
+    Data.s "ButtonRestore",                                                                                 "Restore"
     Data.s "StatusBarText",                                                                                   "Ready"
 
   ;==================================================================================================================
@@ -1117,11 +1117,11 @@ DataSection
   ;==================================================================================================================
     Data.s "SecondTab",                                                                                     "Options"
     Data.s "CheckClose",                                                                              "Close to Tray"
-    Data.s "CheckRestartOE",                                             "Restart OE Classic after backup completion"
-    Data.s "CheckStartInTray",                                                     "Start Application in System Tray"
+    Data.s "CheckRestartOE",                                                        "Restart OE Classic after backup"
+    Data.s "CheckStartInTray",                                                                 "Start in System Tray"
     Data.s "CheckStayOnTop",                                                                            "Stay on Top"
     Data.s "ButtonDesktopShortcut",                                                         "Create Desktop Shortcut"
-    Data.s "ButtonOpenLog",                                                                         "Open Backup Log"
+    Data.s "ButtonOpenLog",                                                                                "View Log"
 
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                      "TaskWindow"
@@ -1152,7 +1152,7 @@ DataSection
   ;==================================================================================================================
   Data.s "_GROUP_",                                                                                       "PopUpMenu"
   ;==================================================================================================================
-    Data.s "RestoreWin",                                                                 "Restore Application Window"
+    Data.s "RestoreWin",                                                                             "Restore Window"
     Data.s "Backup",                                                                                "Backup Database"
     Data.s "Restore",                                                                              "Restore Database"
     Data.s "OpenFolder",                                                                         "Open Backup Folder"
@@ -1210,7 +1210,7 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 6
+; CursorPosition = 5
 ; Folding = AgAAAAA-
 ; EnableThread
 ; EnableXP
