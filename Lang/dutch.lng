@@ -1,65 +1,89 @@
 [MainWindow]
-WinTitle=                            OE Klassieke back-up
-FirstTab=                                Voornaamst
-OEPath=                               OE Klassiek pad:
-BackupLocation=                    Back-uplocatie:
-BackupClearTip=             Klik om het back-uppad te wissen
-ButtonCreateBackup=                      Een backup maken
-ButtonSetLocation=                 Back-uplocatie instellen
-ButtonOpenLocation=               Open Back-uplocatie
-ButtonRestore=                          Back-up terugzetten
-StatusBarText=                                   Klaar
+WinTitle=                                                                              OE Klassieke back-up
+FirstTab=                                                                                        Voornaamst
+OEPath=                                                                                    OE Klassiek pad:
+BackupLocation=                                                                                 Back-uppad:
+BackupClearTip=                                                            Klik om het back-uppad te wissen
+ButtonCreateBackup=                                                                                 Back-up
+ButtonSetLocation=                                                                   Stel het back-uppad in
+ButtonOpenLocation=                                                                     Open het back-uppad
+ButtonRestore=                                                                                   Herstellen
+StatusBarText=                                                                                        Klaar
 
 [OptionsWindow]
-SecondTab=                                     Opties
-CheckClose=                              Dicht bij lade
-CheckRestartOE=  Start OE Classic opnieuw nadat de back-up is voltooid
-CheckStartInTray=     Start de toepassing in het systeemvak
-CheckStayOnTop=                            Blijf er boven op
-ButtonDesktopShortcut=         Maak een bureaubladsnelkoppeling
-ButtonCreateTask=                   Maak een back-uptaak
-ButtonOpenLog=                         Open Back-uplogboek
+SecondTab=                                                                                           Opties
+CheckClose=                                                                                  Dicht bij lade
+CheckRestartOE=                                                      Start OE Classic opnieuw na de back-up
+CheckStartInTray=                                                                   Begin in het systeemvak
+CheckStayOnTop=                                                                           Blijf er boven op
+ButtonDesktopShortcut=                                                     Maak een bureaubladsnelkoppeling
+ButtonOpenLog=                                                                               Bekijk logboek
+
+[TaskWindow]
+ThirdTab=                                                                                       Back-uptaak
+ButtonCreateTask=                                                                                Taak maken
+ButtonDeleteTask=                                                                          Taak verwijderen
+TaskName=                                                                                  Back-upOEClassic
+TaskFrame=                                                                                 Taakinstellingen
+OptionDaily=                                                                                      Dagelijks
+OptionWeekly=                                                                                     Wekelijks
+OptionMonthly=                                                                                  Maandelijks
+TextMonth=                        Selecteer de tijd, maar laat al het andere leeg voor de 1e van elke maand
+ValidTime=                                                            (Geldige tijd is van 00:00 tot 23:59)
+OptionSunday=                                                                                           zo.
+OptionMonday=                                                                                           ma.
+OptionTuesday=                                                                                          di. 
+OptionWednesday=                                                                                        wo.
+OptionThursday=                                                                                         do.
+OptionFriday=                                                                                           vr.
+OptionSaturday=                                                                                         za.
+OptionFirst=                                                                                           1ste
+OptionSecond=                                                                                           2de
+OptionThird=                                                                                          derde
+OptionFourth=                                                                                        vierde
+OptionLast=                                                                                          laatst
+OptionLastDay=                                                                                  laatste dag
 
 [PopUpMenu]
-RestoreWin=                 Applicatievenster herstellen
-Backup=                                Back-updatabase
-Restore=                              Database herstellen
-OpenFolder=                         Open de back-upmap
-QuitApp=                                          Ontslag nemen
+RestoreWin=                                                                              Venster herstellen
+Backup=                                                                                     Backup Database
+Restore=                                                                                   Herstel Database
+OpenFolder=                                                                               Back-upmap Openen
+QuitApp=                                                                                          Afsluiten
 
 [Messages]
-BackupErrorRead=  Kan back-uplogboek niet openen. Bestand is verwijderd of er is nog geen back-up gemaakt.
-CloseError=  OE Classic moet worden gesloten voordat u achteruitrijdt. Nu sluiten?
-Error=       Fout
-ErrNotClosed= OE Classic moet worden gesloten voordat gegevens worden hersteld.
-MsgSuccess=   Back-up voltooid, OE Classic opnieuw gestart.
-OEPathMsg=                OE Klassiek pad niet gevonden!!!
-StatusBackup=         Even geduld a.u.b. back-up maken
-SuccessMsg=                                   Succes
-SysTrayTooltip=  OE Classic Backup - Klik voor opties
+BackupErrorRead=   Kan back-uplogboek niet openen. Bestand is verwijderd of er is nog geen back-up gemaakt.
+CloseError=                           OE Classic moet worden gesloten voordat u achteruitrijdt. Nu sluiten?
+Error=                                                                                                 Fout
+ErrNotClosed=                             OE Classic moet worden gesloten voordat gegevens worden hersteld.
+MsgSuccess=                                                    Back-up voltooid, OE Classic opnieuw gestart
+OEPathMsg=                                                                 OE Klassiek pad niet gevonden!!!
+StatusBackup=                                                              Even geduld a.u.b. back-up maken
+SuccessMsg=                                                                                          Succes
+SysTrayTooltip=                                                        OE Classic Backup - Klik voor opties
 
-[Misc}
-AppRunning= Applicatie loopt al!!! Controleer het systeemvak!!!
-DesktopIconText=                     OE Klassieke back-up
-MsgBackupLocation=            Kies Back-uplocatie:
-TaskName=                            Backup OE Classic
+[Misc]
+AppRunning=                                             Applicatie loopt al!!! Controleer het systeemvak!!!
+DesktopIconText=                                                                       OE Klassieke back-up
+MsgBackupLocation=                                                                     Kies Back-uplocatie:
+TaskName=                                                                                   BackupOEClassic
 
 [RestoreMsgs]
-RestoreQuest= Weet u zeker dat u wilt herstellen vanaf een back-up?
-Restore=                                      Herstellen
-RestoreBkup=                Selecteer back-up om te herstellen:
-Warning=                                      Waarschuwing
-Warning1= Hierdoor worden uw huidige OE Classic-gegevens overschreven. Weet u zeker dat u wilt doorgaan??
-StatusText1=           Even geduld a.u.b.... gegevens worden hersteld
-Completed=                          Herstellen voltooid
-Cancelled=                                  Geannuleerd
-Cencelled2=  Uw herstelverzoek is geannuleerd.
+RestoreQuest=                                         Weet u zeker dat u wilt herstellen vanaf een back-up?
+Restore=                                                                                         Herstellen
+RestoreBkup=                                                            Selecteer back-up om te herstellen:
+Warning=                                                                                       Waarschuwing
+Warning1=    Hierdoor worden uw huidige OE Classic-gegevens overschreven. Weet u zeker dat u wilt doorgaan?
+StatusText1=                                                 Even geduld a.u.b.... gegevens worden hersteld
+Completed=                                                                              Herstellen voltooid
+Cancelled=                                                                                      Geannuleerd
+Cancelled2=                                                               Uw herstelverzoek is geannuleerd.
 
 [LogMessages]
-LogNoPath=                     Er is geen back-uppad gedefinieerd.
-LogFailure=  Back-up mislukt, OE Classic is niet afgesloten.
-LogFailure2= Herstellen mislukt, OE Classic is niet gesloten.
-LogSuccess=    Databaseback-up succesvol opgeslagen in 
-LogSuccess2=                       Herstel succesvol.
-TaskFail= Geplande taak niet gemaakt.
-TaskSucceed= Geplande taak is aangemaakt.
+LogNoPath=                                                              Er is geen back-uppad gedefinieerd.
+LogFailure=                                                 Back-up mislukt, OE Classic is niet afgesloten.
+LogFailure2=                                               Herstellen mislukt, OE Classic is niet gesloten.
+LogSuccess=                                                        Databaseback-up succesvol opgeslagen in 
+LogSuccess2=                                                                             Herstel succesvol.
+TaskFail=                                                                       Geplande taak niet gemaakt.
+TaskSucceed=                                                                   Geplande taak is aangemaakt.

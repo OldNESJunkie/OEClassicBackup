@@ -4,24 +4,24 @@ FirstTab=                                Hauptsächlich
 OEPath=                               OE Classic Path:
 BackupLocation=                    Backup-Speicherort:
 BackupClearTip=             Klicken Sie, um den Sicherungspfad zu löschen
-ButtonCreateBackup=                      Ein Backup erstellen
+ButtonCreateBackup=                      Sicherung
 ButtonSetLocation=                 Legen Sie den Backup-Speicherort fest
 ButtonOpenLocation=               Öffnen Sie den Sicherungsspeicherort
-ButtonRestore=                          Backup wiederherstellen
+ButtonRestore=                          Wiederherstellen
 StatusBarText=                                   Bereit
 
 [OptionsWindow]
 SecondTab=                                     Optionen
 CheckClose=                              In der Nähe des Tabletts
-CheckRestartOE=  Starten Sie OE Classic nach Abschluss der Sicherung neu
-CheckStartInTray=     Starten Sie die Anwendung in der Taskleiste
+CheckRestartOE=  Starten Sie OE Classic nach der Sicherung neu
+CheckStartInTray=     Starten Sie in der Taskleiste
 CheckStayOnTop=                            An der Spitze bleiben
 ButtonDesktopShortcut=         Desktopverknüpfung erstellen
 ButtonCreateTask=                   Sicherungsaufgabe erstellen
-ButtonOpenLog=                         Öffnen Sie das Sicherungsprotokoll
+ButtonOpenLog=                         Protokoll ansehen
 
 [PopUpMenu]
-RestoreWin=                 Anwendungsfenster wiederherstellen
+RestoreWin=                 Fenster wiederherstellen
 Backup=                                Backup-Datenbank
 Restore=                              Datenbank wiederherstellen
 OpenFolder=                         Öffnen Sie den Sicherungsordner

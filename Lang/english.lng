@@ -4,20 +4,20 @@ FirstTab=                                                                       
 OEPath=                                                                                    OE Classic Path:
 BackupLocation=                                                                                BackUp Path:
 BackupClearTip=                                                                  Click to clear backup path
-ButtonCreateBackup=                                                                           Create Backup
+ButtonCreateBackup=                                                                           		 Backup
 ButtonSetLocation=                                                                          Set Backup Path
 ButtonOpenLocation=                                                                        Open Backup Path
-ButtonRestore=                                                                               Restore Backup
+ButtonRestore=                                                                               		Restore
 StatusBarText=                                                                                        Ready
 
 [OptionsWindow]
 SecondTab=                                                                                          Options
 CheckClose=                                                                                   Close to Tray
-CheckRestartOE=                                                  Restart OE Classic after backup completion
-CheckStartInTray=                                                          Start Application in System Tray
+CheckRestartOE=                                                  			Restart OE Classic after backup
+CheckStartInTray=                                                          			   Start in System Tray
 CheckStayOnTop=                                                                                 Stay on Top
 ButtonDesktopShortcut=                                                              Create Desktop Shortcut
-ButtonOpenLog=                                                                              Open Backup Log
+ButtonOpenLog=                                                                              	   View Log
 
 [TaskWindow]
 ThirdTab=                                                                                       Backup Task
@@ -44,7 +44,7 @@ OptionLast=                                                                     
 OptionLastDay=                                                                                     Last Day
 
 [PopUpMenu]
-RestoreWin=                                                                      Restore Application Window
+RestoreWin=                                                                      			 Restore Window
 Backup=                                                                                     Backup Database
 Restore=                                                                                   Restore Database
 OpenFolder=                                                                              Open Backup Folder
