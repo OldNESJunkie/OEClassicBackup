@@ -2,6 +2,7 @@
 ;**  OE Classic Database Backup **
 ;**              by             **
 ;**   Daniel Ford 02/12/2021    **
+;**     Updated 01/06/2024      **
 ;*********************************
 
 
@@ -35,11 +36,13 @@ Global ProcessFirst.ProcessFirst
 Global ProcessNext.ProcessNext
 Global Language.Language
 Global schedule.s, day.s, hour.s, minute.s, scheduledday.s
+Global Dots.s
 ;}
 
 ;{ Window/Gadget Enumeration
 Enumeration
 #Window_Main
+#Timer
 #Panel1
 #StatusBar
 ;Main Tab
@@ -118,7 +121,7 @@ If FindWin("OE Classic")
   RunProgram("taskkill","/f /im oeclassic.exe","",#PB_Program_Hide|#PB_Program_Wait)
    windowfound=1
 EndIf
-GetDate=FormatDate("%yyyy%mm%dd",Date())
+GetDate=FormatDate("%yyyy%mm%dd %hh:%ii:%ss",Date())
 OpenPreferences("oebackup.prefs")
  MyLocation=ReadPreferenceString("BkUpDir","")
 ClosePreferences()
@@ -131,9 +134,9 @@ If MyLocation=""
 EndIf
 oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
  If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  Else
-   myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  EndIf
 While ProgramRunning(myid)
 Wend
@@ -407,14 +410,25 @@ PCName=GetEnvironmentVariable("COMPUTERNAME")
 runbackup:
    GetDate=FormatDate("%yyyy%mm%dd",Date())
    MyName=GetEnvironmentVariable("USERNAME")
-     While WaitWindowEvent(1):Wend
-       StatusBarText(#StatusBar,0,Language(Language,"Messages","StatusBackup"),#PB_StatusBar_Center)
+     StatusBarText(#StatusBar,0,Language(Language,"Messages","StatusBackup"),#PB_StatusBar_Center)
       If FindString(MyLocation," ",1)
-        myid=RunProgram("7z.exe","a -mx=9 "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+        myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
       Else
-        myid=RunProgram("7z.exe","a -mx=9 "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
+        myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Hide)
       EndIf
        While ProgramRunning(myid)
+        Select WaitWindowEvent(1)
+          Case #PB_Event_Timer
+            If ProgramRunning(myid)
+              StatusBarText(#StatusBar, 0, Language(Language,"Messages","StatusBackup") + Dots,#PB_StatusBar_Center)
+               Dots + "."
+             If Len(Dots) >= 11
+               Dots = ""
+             EndIf
+            Else
+              StatusBarText(#StatusBar, 0, Language(Language,"MainWindow","StatusBarText"),#PB_StatusBar_Center)
+            EndIf
+        EndSelect
        Wend
          StatusBarText(#StatusBar,0,"Ready",#PB_StatusBar_Center)
           WriteLog("Backup",Language(Language,"LogMessages","LogSuccess")+Chr(34)+MyLocation+Chr(34))
@@ -620,7 +634,7 @@ If ProgramParameter()=""
  Else
    startme=#PB_Window_ScreenCentered
  EndIf
-  If OpenWindow(#Window_Main,0,0,500,200,Language(Language,"MainWindow","WinTitle"),startme|#PB_Window_SystemMenu)
+  If OpenWindow(#Window_Main,0,0,500,200,Language(Language,"MainWindow","WinTitle"),startme|#PB_Window_MinimizeGadget)
    PanelGadget(#Panel1,5,5,492,170)
     AddGadgetItem(#Panel1,0,Language(Language,"MainWindow","FirstTab"))
      TextGadget(#Text_Path,40,7,100,20,Language(Language,"MainWindow","OEPath"))
@@ -752,6 +766,7 @@ If ProgramParameter()=""
 ;}
          SetWindowCallback(@WinCallback()); Activate the callback
   EndIf
+AddWindowTimer(#Window_Main,#Timer,1000)
 EndIf
 ;}
 
@@ -1167,7 +1182,7 @@ DataSection
     Data.s "ErrNotClosed",                                         "OE Classic must be closed before restoring data."
     Data.s "MsgSuccess",                                                   "Backup Completed, Re-starting OE Classic"
     Data.s "OEPathMsg",                                                                "OE Classic path not found!!!"
-    Data.s "StatusBackup",                                                          "Please wait.....creating backup"
+    Data.s "StatusBackup",                                                                          "Creating backup"
     Data.s "SuccessMsg",                                                                                    "Success"
     Data.s "SysTrayTooltip",                                                  "OE Classic Backup - Click for Options"
 
@@ -1210,7 +1225,7 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 5
+; CursorPosition = 7
 ; Folding = AgAAAAA-
 ; EnableThread
 ; EnableXP
