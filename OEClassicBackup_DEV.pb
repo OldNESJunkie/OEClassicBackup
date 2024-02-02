@@ -134,9 +134,9 @@ If MyLocation=""
 EndIf
 oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
  If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y"+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  Else
-   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y"+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  EndIf
 While ProgramRunning(myid)
 Wend
@@ -663,7 +663,6 @@ If ProgramParameter()=""
      AddGadgetItem(#Panel1,2,Language(Language,"TaskWindow","ThirdTab"));Backup Task
        FrameGadget(#Frame_TaskSettings,5,5,475,95,Language(Language,"TaskWindow","TaskFrame"))
         OptionGadget(#Option_Daily,20,25,100,20,Language(Language,"TaskWindow","OptionDaily"))
-         SetGadgetState(#Option_Daily,1)
         OptionGadget(#Option_Weekly,20,50,100,20,Language(Language,"TaskWindow","OptionWeekly"))
         OptionGadget(#Option_Monthly,20,75,100,20,Language(Language,"TaskWindow","OptionMonthly"))
          SpinGadget(#SpinGadget_Hour,130,70,50,23,0,23,#PB_Spin_Numeric)
@@ -860,26 +859,9 @@ Select event
             DisableGadget(#Option_Daily,0)
              DisableGadget(#Option_Weekly,0)
               DisableGadget(#Option_Monthly,0)
-               DisableGadget(#Option_Sun,0)
-                DisableGadget(#Option_Mon,0)
-                 DisableGadget(#Option_Tue,0)
-                  DisableGadget(#Option_Wed,0)
-                   DisableGadget(#Option_Thu,0)
-                    DisableGadget(#Option_Fri,0)
-                     DisableGadget(#Option_Sat,0)
-                      DisableGadget(#Option_First,0)
-                       DisableGadget(#Option_Second,0)
-                      DisableGadget(#Option_Third,0)
-                     DisableGadget(#Option_Fourth,0)
-                    DisableGadget(#Option_Last,0)
-                   DisableGadget(#Option_LastDay,0)
-                  DisableGadget(#SpinGadget_Hour,0)
-                 DisableGadget(#TextGadget_Colon,0)
-                DisableGadget(#SpinGadget_Minute,0)
-               DisableGadget(#Button_CreateTask,0)
-              DisableGadget(#Text_Time,0)
-             DisableGadget(#Text_Month,0)
-            HideGadget(#Button_DeleteTask,1)
+              DisableGadget(#Button_CreateTask,0)
+             HideGadget(#Button_DeleteTask,1)
+            SetActiveGadget(#Option_Daily)
           EndIf
 ;}
 ;{ Checkbox Gadgets
