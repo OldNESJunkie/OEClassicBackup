@@ -767,6 +767,7 @@ If ProgramParameter()=""
   EndIf
 AddWindowTimer(#Window_Main,#Timer,1000)
 EndIf
+DisableGadget(#Button_CreateTask,1)
 ;}
 
 ;{ Main Loop
@@ -957,7 +958,8 @@ Select event
                    DisableGadget(#Option_Fourth,1)
                     DisableGadget(#Option_Last,1)
                      DisableGadget(#Option_LastDay,1)
-                      HideGadget(#Text_Month,1)
+                      DisableGadget(#Button_CreateTask,0)
+                       HideGadget(#Text_Month,1)
 
       Case #Option_Weekly
         schedule="Weekly"
@@ -974,7 +976,8 @@ Select event
                    DisableGadget(#Option_Fourth,1)
                     DisableGadget(#Option_Last,1)
                      DisableGadget(#Option_LastDay,1)
-                      HideGadget(#Text_Month,1)
+                      DisableGadget(#Button_CreateTask,0)
+                       HideGadget(#Text_Month,1)
 
       Case #Option_Monthly
         schedule="Monthly"
@@ -991,7 +994,8 @@ Select event
                    DisableGadget(#Option_Fourth,0)
                     DisableGadget(#Option_Last,0)
                      DisableGadget(#Option_LastDay,0)
-                      HideGadget(#Text_Month,0)
+                      DisableGadget(#Button_CreateTask,0)
+                       HideGadget(#Text_Month,0)
 
 ;}
 ;{ Text Gadgets
