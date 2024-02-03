@@ -134,9 +134,9 @@ If MyLocation=""
 EndIf
 oepath.s=GetEnvironmentVariable("userprofile")+"\Appdata\Local\OEClassic"
  If FindString(MyLocation," ",1)
-   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y"+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y "+Chr(34)+MyLocation+Chr(34)+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  Else
-   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y"+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
+   myid=RunProgram("7z.exe","a -mmt -mx=9 -slp -y "+MyLocation+"OEClassicBackup_"+PCName+"_"+MyName+"_"+GetDate+".7z "+oepath,"",#PB_Program_Open|#PB_Program_Error|#PB_Program_Hide)
  EndIf
 While ProgramRunning(myid)
 Wend
@@ -1211,8 +1211,9 @@ DataSection
 EndDataSection
 ;}
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 7
-; Folding = AgAAAAA-
+; CursorPosition = 138
+; FirstLine = 12
+; Folding = AngAAAA-
 ; EnableThread
 ; EnableXP
 ; DPIAware
